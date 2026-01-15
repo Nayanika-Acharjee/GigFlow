@@ -1,51 +1,55 @@
-🟣 GigFlow 🧑‍💻💼:
+# 🟣 GigFlow 🧑‍💻💼:
 
 Mini Freelance Marketplace Platform
 
 GigFlow is a mini freelance marketplace where users can post jobs (Gigs) and apply to them (Bids).
 The project focuses on secure authentication, complex database relationships, and robust hiring logic.
 
-🚀 *Tech Stack:*
+---
 
-• _Backend_ -
+## 🚀 *Tech Stack:*
+
+### • _Backend_ -
 
 Node.jsExpress.js,MongoDB + Mongoose,JWT Authentication (HttpOnly Cookies),Socket.io (prepared for real-time notifications)
 
-• _Frontend_ -
+### • _Frontend_ -
 
 React (Vite),Tailwind CSS,Axios,Context API
 
-✅ Core Features Implemented:
+---
 
-🔐 *Authentication-*
+## ✅ Core Features Implemented:
 
---Secure Register / Login
+### 🔐 *Authentication-*
 
---JWT stored in HttpOnly cookies
+• Secure Register / Login
 
---Protected routes using middleware
+• JWT stored in HttpOnly cookies
+
+• Protected routes using middleware
 
 Role-fluid system (any user can be Client or Freelancer)
 
-📌 *Gig Managemen* t-
+### 📌 *Gig Management-
 
---Create gigs (protected)
+--> Create gigs (protected)
 
---Browse all open gigs (public)
+--> Browse all open gigs (public)
 
---Gig status: open → assigned
+--> Gig status: open → assigned
 
-💬 *Bidding System:*
+### 💬 *Bidding System:*
 
---Freelancers can bid on gigs
+--> Freelancers can bid on gigs
 
---Clients can view all bids for their gigs
+--> Clients can view all bids for their gigs
 
---Bid status: pending, hired, rejected
+--> Bid status: pending, hired, rejected
 
-🧠 *Hiring Logic* (Crucial):
+### 🧠 *Hiring Logic* (Crucial):
 
-•When a client hires a freelancer-
+• When a client hires a freelancer-
 
 (Gig status changes to assigned
 
@@ -58,23 +62,26 @@ Authorization check ensures only the gig owner can hire)
 
 This logic is fully implemented and tested.
 
-🧪 *API Testing* :
+---
+
+### 🧪 *API Testing* :
 
 All backend features were tested using Thunder Client / Postman, including:
 
---User registration & login
+• User registration & login
 
---Gig creation
+• Gig creation
 
---Bid submission
+• Bid submission
 
---Hiring workflow
+• Hiring workflow
 
-" *_Screenshots can be provided if required."_*
+#### " *_Screenshots can be provided if required."_*
 
 
+---
 
-⚠️ *Frontend Status (Important Note)*
+### ⚠️ *Frontend Status (Important Note)*
 
 Due to time constraints, the backend is fully completed and tested.
 The frontend UI is partially implemented; however, CORS and cookie-based authentication issues prevented final end-to-end integration within the allotted time.

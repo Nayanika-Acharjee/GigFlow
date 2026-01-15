@@ -88,4 +88,4 @@ The frontend UI is partially implemented; however, CORS and cookie-based authent
 
 All core business logic (Auth, Gigs, Bids, Hiring flow) is complete and functional via API testing.
 
-With additional time, frontend integration would be finalized.
+With additional time, UI design would be finalized.

@@ -21,12 +21,13 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-    "http://localhost:5173",
-    "https://gig-flow-lac.vercel.app/"
-  ],
-  credentials: true
+      "http://localhost:5173",
+      "https://gig-flow-lac.vercel.app"
+    ],
+    credentials: true,
   })
 );
+
 
 
 app.use("/api/auth", authRoutes);
@@ -58,3 +59,4 @@ mongoose
     console.error("❌ MongoDB connection failed:", err.message);
     process.exit(1);
   });
+

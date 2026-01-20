@@ -10,13 +10,13 @@ export const AuthProvider = ({ children }) => {
   // LOGIN
   const login = async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
-    setUser(res.data); // ✅ FIX HERE
+    setUser(res.data);
   };
 
   // REGISTER
   const register = async (name, email, password) => {
     const res = await api.post("/auth/register", { name, email, password });
-    setUser(res.data); // ✅ FIX HERE
+    setUser(res.data);
   };
 
   // LOGOUT
@@ -41,11 +41,21 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
+  // ⛔ BLOCK APP RENDER UNTIL AUTH IS READY
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "40vh" }}>
+        <h3>Loading...</h3>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+

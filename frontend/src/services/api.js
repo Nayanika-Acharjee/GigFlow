@@ -5,4 +5,13 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export default api;
+axios.defaults.withCredentials = true;
+
+export const createGig = (data) =>
+  axios.post("/api/gigs", data);
+
+export const getMyGigs = () =>
+  axios.get("/api/gigs/my");
+
+export const getOpenGigs = () =>
+  axios.get("/api/gigs");

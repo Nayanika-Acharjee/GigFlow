@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   // LOGIN
   const login = async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
-    setUser(res.data);
+    setUser(res.data); // backend returns user directly
   };
 
   // REGISTER
@@ -26,29 +26,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   // LOAD USER FROM COOKIE
-  const loadUser = async () => {
-    try {
-      const res = await api.get("/auth/me");
-      setUser(res.data);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const res = await api.get("/auth/me");
+        setUser(res.data);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadUser();
   }, []);
 
-  // ⛔ BLOCK APP RENDER UNTIL AUTH IS READY
-  if (loading) {
-    return (
-      <div style={{ textAlign: "center", marginTop: "40vh" }}>
-        <h3>Loading...</h3>
-      </div>
-    );
-  }
+  // 🔑 THIS LINE IS THE FIX
+  if (loading) return null;
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout }}>
@@ -58,4 +52,5 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
 

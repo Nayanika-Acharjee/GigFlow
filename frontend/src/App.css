@@ -1,5 +1,5 @@
-//* ---------------- GLOBAL ---------------- */
-* {
+
+ {
   box-sizing: border-box;
   font-family: Inter, sans-serif;
 }
@@ -47,7 +47,7 @@ button.secondary {
   background: #334155;
 }
 
-/* ---------------- AUTH ---------------- */
+
 .auth-center {
   height: 100vh;
   display: flex;
@@ -64,7 +64,7 @@ button.secondary {
   box-shadow: 0 8px 18px rgba(231, 227, 227, 0.35);
 }
 
-/* ---------------- LAYOUT ---------------- */
+
 .app-layout {
   display: flex;
   height: 100vh;
@@ -76,7 +76,7 @@ button.secondary {
   overflow-y: auto;
 }
 
-/* ---------------- SIDEBAR ---------------- */
+
 .sidebar {
   width: 230px;
   background: linear-gradient(180deg, #020617, #020617ee);
@@ -117,14 +117,14 @@ button.secondary {
   background: #c71717d3;
 }
 
-/* ---------------- HOME ---------------- */
+
 .home-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 30px;
 }
 
-/* ---------------- CARDS ---------------- */
+
 .gig-card,
 .bid-card {
   background: radial-gradient(circle at top, #020617, #020617cc);
@@ -157,7 +157,6 @@ font-style: Courier;
 }
 
 
-/* ---------------- PAGE ---------------- */
 .page {
   max-width: 700px;
   animation: fadeSlide 0.35s ease;
@@ -181,7 +180,7 @@ font-style: Courier;
   color: #a5b4fc;
 }
 
-/* ---------------- BID STATUS ---------------- */
+
 .bid-card {
   position: relative;
   padding-left: 22px;
@@ -209,7 +208,7 @@ font-style: Courier;
   background: red;
 }
 
-/* ---------------- STATUS PILL ---------------- */
+
 .status-pill {
   display: inline-block;
   padding: 4px 10px;
@@ -233,7 +232,7 @@ font-style: Courier;
   color: white;
 }
 
-/* ---------------- ANIMATIONS ---------------- */
+
 @keyframes fadeSlide {
   from {
     opacity: 0;
@@ -270,7 +269,7 @@ font-style: Courier;
   z-index: 100;
 }
 
-/* Push app below dashboard */
+
 .app-layout {
   padding-top: 64px;
 }

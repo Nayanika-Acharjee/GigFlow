@@ -2,7 +2,7 @@ import User from "./user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-/* ---------------- TOKEN ---------------- */
+/* ================= TOKEN ================= */
 const generateToken = (res, userId) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -10,33 +10,35 @@ const generateToken = (res, userId) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: false, // true in production
+    secure: false, // set true in production (HTTPS)
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
-/* ---------------- REGISTER ---------------- */
+/* ================= REGISTER ================= */
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
 
-    const userExists = await User.findOne({ email });
+    const emailNormalized = email.trim().toLowerCase();
+    const passwordNormalized = password.trim();
+
+    const userExists = await User.findOne({ email: emailNormalized });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(passwordNormalized, 10);
 
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: emailNormalized,
       password: hashedPassword,
-      role,
     });
 
     generateToken(res, user._id);
@@ -46,7 +48,6 @@ export const register = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
       },
     });
   } catch (err) {
@@ -54,7 +55,7 @@ export const register = async (req, res) => {
   }
 };
 
-/* ---------------- LOGIN ---------------- */
+/* ================= LOGIN ================= */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -63,12 +64,15 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const emailNormalized = email.trim().toLowerCase();
+    const passwordNormalized = password.trim();
+
+    const user = await User.findOne({ email: emailNormalized }).select("+password");
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(passwordNormalized, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -80,7 +84,6 @@ export const login = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
       },
     });
   } catch (err) {
@@ -88,7 +91,7 @@ export const login = async (req, res) => {
   }
 };
 
-/* ---------------- LOGOUT ---------------- */
+/* ================= LOGOUT ================= */
 export const logout = (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
@@ -98,7 +101,7 @@ export const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-/* ---------------- GET ME ---------------- */
+/* ================= GET ME ================= */
 export const getMe = async (req, res) => {
   res.json(req.user);
 };

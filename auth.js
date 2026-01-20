@@ -2,6 +2,7 @@ import User from "./user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+/* ---------------- TOKEN ---------------- */
 const generateToken = (res, userId) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -15,12 +16,12 @@ const generateToken = (res, userId) => {
   });
 };
 
-// REGISTER
+/* ---------------- REGISTER ---------------- */
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -35,24 +36,32 @@ export const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role,
     });
 
     generateToken(res, user._id);
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// LOGIN
+/* ---------------- LOGIN ---------------- */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
@@ -67,16 +76,19 @@ export const login = async (req, res) => {
     generateToken(res, user._id);
 
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// LOGOUT
+/* ---------------- LOGOUT ---------------- */
 export const logout = (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
@@ -86,7 +98,7 @@ export const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-// GET ME
+/* ---------------- GET ME ---------------- */
 export const getMe = async (req, res) => {
   res.json(req.user);
 };

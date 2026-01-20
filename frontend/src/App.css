@@ -1,78 +1,283 @@
-/* Global dark theme */
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  background-color: #0f172a; /* dark slate */
-  color: #e5e7eb; /* light text */
+//* ---------------- GLOBAL ---------------- */
+* {
+  box-sizing: border-box;
+  font-family: Inter, sans-serif;
 }
 
-/* Container */
-.app {
-  min-height: 100vh;
+body {
+  margin: 0;
+  background: #0f172a;
+  color: white;
+}
+
+input,
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: white;
+}
+
+input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 1px #6366f1;
+}
+
+button {
+  cursor: pointer;
+  background: #5fe988c5;
+  border: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+button:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button.secondary {
+  background: #334155;
+}
+
+/* ---------------- AUTH ---------------- */
+.auth-center {
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Card */
-.card {
-  background-color: #020617; /* very dark */
-  padding: 2rem;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+.auth-card {
+  background: #020617;
+  padding: 30px;
+  width: 420px;
+  border-radius: 15px;
+  animation: popIn 0.3s ease;
+  box-shadow: 0 8px 18px rgba(231, 227, 227, 0.35);
 }
 
-/* Headings */
-h2,
-h3 {
-  margin-bottom: 1rem;
-  color: #f8fafc;
+/* ---------------- LAYOUT ---------------- */
+.app-layout {
+  display: flex;
+  height: 100vh;
 }
 
-/* Inputs */
-input {
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
+.main {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* ---------------- SIDEBAR ---------------- */
+.sidebar {
+  width: 230px;
+  background: linear-gradient(180deg, #020617, #020617ee);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-right: 1px solid #1e293b;
+  height: calc(100vh - 64px);
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+  font-size: 38px;
+  color: #a0aef3;
+}
+
+.sidebar a {
+  color: #f5fae0e1;
+  text-decoration: none;
+  padding: 10px 14px;
   border-radius: 8px;
+  transition: 0.2s;
+  
+}
+
+.sidebar a:hover {
+  background: #1e293b;
+}
+
+.sidebar .active {
+  background: #6366f1;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.sidebar .logout {
+  margin-top: auto;
+  background: #c71717d3;
+}
+
+/* ---------------- HOME ---------------- */
+.home-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+/* ---------------- CARDS ---------------- */
+.gig-card,
+.bid-card {
+  background: radial-gradient(circle at top, #020617, #020617cc);
   border: 1px solid #1e293b;
-  background-color: #020617;
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 15px;
+  animation: popIn 0.25s ease;
+  width:420px;
+}
+
+.gig-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.gig-card h4 {
+  margin: 0;
   color: #e5e7eb;
+  font-size: 18px;
 }
 
-input:focus {
-  outline: none;
-  border-color: #22c55e;
+.gig-card p {
+  color: #94a3b8;
+  font-size: 16px;
 }
 
-/* Buttons */
-button {
-  width: 100%;
-  padding: 0.75rem;
-  margin-top: 0.5rem;
-  border-radius: 8px;
-  border: none;
-  background-color: #22c55e; /* dark green */
-  color: #022c22;
+.text {
+font-style: Courier;
+}
+
+
+/* ---------------- PAGE ---------------- */
+.page {
+  max-width: 700px;
+  animation: fadeSlide 0.35s ease;
+}
+
+.page-title {
+  font-size: 26px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  margin-bottom: 20px;
+  color: #f3edee;
+  font-style: Courier;
 }
 
-button:hover {
-  background-color: #16a34a;
+.section {
+  margin-bottom: 32px;
 }
 
-/* Secondary button */
-button.secondary {
-  background-color: transparent;
-  border: 1px solid #22c55e;
-  color: #22c55e;
+.section-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #a5b4fc;
 }
 
-button.secondary:hover {
-  background-color: rgba(34, 197, 94, 0.1);
+/* ---------------- BID STATUS ---------------- */
+.bid-card {
+  position: relative;
+  padding-left: 22px;
+}
+
+.bid-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  border-radius: 6px;
+}
+
+.bid-card.pending::before {
+  background: orange;
+}
+
+.bid-card.hired::before {
+  background: lime;
+}
+
+.bid-card.rejected::before {
+  background: red;
+}
+
+/* ---------------- STATUS PILL ---------------- */
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-pill.pending {
+  background: #f59e0b;
+  color: black;
+}
+
+.status-pill.hired {
+  background: #22c55e;
+  color: black;
+}
+
+.status-pill.rejected {
+  background: #ef4444;
+  color: white;
+}
+
+/* ---------------- ANIMATIONS ---------------- */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.dashboard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 100;
+}
+
+/* Push app below dashboard */
+.app-layout {
+  padding-top: 64px;
+}
+
+.profile-card {
+  padding: 16px;
+  background: #0502228c;
+  border-radius: 8px;
+  width: fit-content;
 }

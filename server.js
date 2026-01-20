@@ -4,17 +4,17 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 
-// ✅ LOAD .env.local EXPLICITLY
+
 dotenv.config({ path: ".env.local" });
 
-// ROUTES
+
 import authRoutes from "./auth.routes.js";
 import gigRoutes from "./gig.routes.js";
 import bidRoutes from "./bid.routes.js";
 
 const app = express();
 
-// ================== MIDDLEWARE ==================
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -25,7 +25,7 @@ app.use(
   })
 );
 
-// ================== ROUTES ==================
+
 app.use("/api/auth", authRoutes);
 app.use("/api/gigs", gigRoutes);
 app.use("/api/bids", bidRoutes);
@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
   res.send("GigFlow API running");
 });
 
-// ================== DATABASE ==================
+
 const PORT = process.env.PORT || 5000;
 
 if (!process.env.MONGO_URI) {

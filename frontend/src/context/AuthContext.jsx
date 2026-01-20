@@ -1,36 +1,19 @@
-import { createContext, useContext, useState } from "react";
-import api from "../api";
+import { createContext, useContext, useEffect, useState } from "react";
+import api from "../services/api";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const register = async (name, email, password) => {
-    try {
-      const res = await api.post("/auth/register", {
-        name,
-        email,
-        password,
-      });
-      setUser(res.data);
-      return res.data;
-    } catch (err) {
-      throw err;
-    }
+  const login = async (email, password) => {
+    const res = await api.post("/auth/login", { email, password });
+    setUser(res.data.user);
   };
 
-  const login = async (email, password) => {
-    try {
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-      });
-      setUser(res.data);
-      return res.data;
-    } catch (err) {
-      throw err;
-    }
+  const register = async (name, email, password) => {
+    const res = await api.post("/auth/register", { name, email, password });
+    setUser(res.data.user);
   };
 
   const logout = async () => {
@@ -38,8 +21,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const loadUser = async () => {
+    try {
+      const res = await api.get("/auth/me");
+      setUser(res.data);
+    } catch {
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

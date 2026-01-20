@@ -1,31 +1,21 @@
 import express from "express";
-import Gig from "./gig.js";
-import { protect } from "./auth.middleware.js";
+import { protect } from "../middleware/auth.middleware.js";
+import {  
+  createGig,
+  getMyGigs,
+  getOpenGigs,
+} from "../controllers/gig.controller.js";
 
 const router = express.Router();
 
-// CREATE GIG (protected)
-router.post("/", protect, async (req, res) => {
-  try {
-    const { title, description, budget } = req.body;
+/* CREATE GIG */
+router.post("/", protect, createGig);
 
-    const gig = await Gig.create({
-      title,
-      description,
-      budget,
-      ownerId: req.user._id,
-    });
+/* GET LOGGED-IN USER GIGS */
+router.get("/my", protect, getMyGigs);
 
-    res.status(201).json(gig);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// GET OPEN GIGS (public)
-router.get("/", async (req, res) => {
-  const gigs = await Gig.find({ status: "open" });
-  res.json(gigs);
-});
+/* GET ALL OPEN GIGS (PUBLIC) */
+router.get("/", getOpenGigs);
 
 export default router;
+

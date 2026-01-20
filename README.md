@@ -6,6 +6,11 @@ GigFlow is a mini freelance marketplace where users can post jobs (Gigs) and app
 The project focuses on secure authentication, complex database relationships, and robust hiring logic.
 
 ---
+## 🎥 Demo Video:
+
+👉 [Watch the Project Demo on Google Drive](https://drive.google.com/file/d/1kFm0PKThquGjglUPYlf3eo0VQ-fVu3CQ/view?usp=sharing)
+
+---
 
 ## 🚀 *Tech Stack:*
 

@@ -17,7 +17,7 @@ export default function App() {
   const [gigs, setGigs] = useState([]);
   const [bids, setBids] = useState([]);
 
-  /* ---------------- AUTH HANDLERS ---------------- */
+  /* ---------------- AUTH ---------------- */
 
   const handleLogin = async () => {
     try {
@@ -42,16 +42,14 @@ export default function App() {
     }
   };
 
-  /* ---------------- AUTH UI ---------------- */
-
   if (!user) {
     return (
       <div className="auth-center">
         <div className="auth-card">
           <h2>{authMode === "login" ? "Login" : "Register"}</h2>
 
-          <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
 
           {authMode === "register" && (
             <input
@@ -83,8 +81,9 @@ export default function App() {
         title,
         desc,
         budget,
-        createdBy: user.email,
-        hiredBidId: null
+        hiredBidId: null,
+        ownerId: user._id,     // ✅ OWNER STORED
+        ownerEmail: user.email
       },
       ...gigs
     ]);
@@ -93,7 +92,7 @@ export default function App() {
   const placeBid = (gigId, message, amount) => {
     const gig = gigs.find(g => g.id === gigId);
 
-    if (gig.createdBy === user.email) {
+    if (gig.ownerId === user._id) {
       alert("You can't place a bid on your own gig");
       return;
     }
@@ -104,8 +103,8 @@ export default function App() {
         gigId,
         message,
         amount,
-        bidder: user.email,
-        status: "pending"
+        status: "pending",
+        bidderId: user._id    // ✅ BIDDER STORED
       },
       ...bids
     ]);
@@ -117,8 +116,15 @@ export default function App() {
     const bid = bids.find(b => b.id === bidId);
     const gig = gigs.find(g => g.id === gigId);
 
-    if (bid.bidder === user.email) {
+    // ❌ bidder cannot hire himself
+    if (bid.bidderId === user._id) {
       alert("You cannot hire yourself");
+      return;
+    }
+
+    // ❌ only gig owner can hire
+    if (gig.ownerId !== user._id) {
+      alert("Only the gig creator can hire");
       return;
     }
 
@@ -138,8 +144,6 @@ export default function App() {
 
     alert("🎉 Congratulations! Freelancer hired successfully");
   };
-
-  /* ---------------- FILTERS ---------------- */
 
   const openGigs = gigs.filter(g => !g.hiredBidId);
   const myBids = bids;
@@ -168,14 +172,15 @@ export default function App() {
           <div className="home-layout">
             <div className="page large">
               <h2 className="text">CREATE GIGS</h2>
-              <input placeholder="Title" id="title" />
-              <input placeholder="Description" id="desc" />
-              <input placeholder="Budget" id="budget" />
+              <input id="title" placeholder="Title" />
+              <input id="desc" placeholder="Description" />
+              <input id="budget" placeholder="Budget" />
+
               <button onClick={() =>
                 createGig(
-                  title.value,
-                  desc.value,
-                  budget.value
+                  document.getElementById("title").value,
+                  document.getElementById("desc").value,
+                  document.getElementById("budget").value
                 )
               }>
                 Create Gig
@@ -190,8 +195,9 @@ export default function App() {
                   <p>{gig.desc}</p>
                   <strong>₹ {gig.budget}</strong>
 
-                  <input placeholder="Bid message" id={`msg-${gig.id}`} />
-                  <input placeholder="Bid amount" id={`amt-${gig.id}`} />
+                  <input id={`msg-${gig.id}`} placeholder="Bid message" />
+                  <input id={`amt-${gig.id}`} placeholder="Bid amount" />
+
                   <button onClick={() =>
                     placeBid(
                       gig.id,
@@ -230,7 +236,7 @@ export default function App() {
             <h2>Status</h2>
             {myBids.map(b => {
               const gig = gigs.find(g => g.id === b.gigId);
-              const isCreator = gig?.createdBy === user.email;
+              const isCreator = gig?.ownerId === user._id;
 
               return (
                 <div key={b.id} className={`bid-card ${b.status}`}>
@@ -249,57 +255,24 @@ export default function App() {
           </div>
         )}
 
+        {page === "profile" && (
+          <div className="page">
+            <h2>Profile</h2>
+            <p><strong>Name:</strong> {user.name}</p>
+            <p><strong>Email:</strong> {user.email}</p>
+          </div>
+        )}
 
-       {page === "profile" && (
-  <div className="page">
-    <h2>Profile</h2>
-
-    <div className="profile-card">
-      <p><strong>Name:</strong> {user.name || "User"}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-    </div>
-  </div>
-)}
-
-
-
-       {page === "contact" && (
-  <div className="page">
-    <h2>Contact Us</h2>
-
-    <input
-      placeholder="Subject"
-      id="contact-subject"
-    />
-
-    <textarea
-      placeholder="Your message"
-      rows="5"
-      id="contact-message"
-    />
-
-    <button
-      onClick={() => {
-        const subject = document.getElementById("contact-subject").value;
-        const message = document.getElementById("contact-message").value;
-
-        if (!subject || !message) {
-          alert("Please fill all fields");
-          return;
-        }
-
-        alert("📩 Message sent successfully!");
-        document.getElementById("contact-subject").value = "";
-        document.getElementById("contact-message").value = "";
-      }}
-    >
-      Send Message
-    </button>
-  </div>
-)}
-
-
-
+        {page === "contact" && (
+          <div className="page">
+            <h2>Contact Us</h2>
+            <input id="contact-subject" placeholder="Subject" />
+            <textarea id="contact-message" rows="5" placeholder="Your message" />
+            <button onClick={() => alert("📩 Message sent successfully!")}>
+              Send Message
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

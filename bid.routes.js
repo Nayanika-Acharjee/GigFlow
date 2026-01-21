@@ -30,12 +30,13 @@ router.post("/", protect, async (req, res) => {
       return res.status(400).json({ message: "Gig is not open for bidding" });
     }
 
-    const bid = await Bid.create({
-      gigId,
-      freelancerId: req.user._id,
-      message,
-      price
-    });
+   const bid = await Bid.create({
+  gigId,
+  bidderId: req.user._id,
+  message,
+  price
+});
+
 
     res.status(201).json(bid);
   } catch (err) {

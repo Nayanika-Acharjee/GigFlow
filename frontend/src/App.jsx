@@ -246,7 +246,7 @@ const myBids = bids;
   <div className="page">
     <h2>Status</h2>
 
-    {Bids.map(b => {
+    {myBids.map(b => {
       const gig = gigs.find(g => g._id === b.gigId);
       const isCreator = gig?.ownerId === user._id;
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import api from "./axios";
 import "./App.css";
@@ -14,10 +14,12 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-const [gigs, setGigs] = useState([]);
-const [bids, setBids] = useState([]);
+  // app data
+  const [gigs, setGigs] = useState([]);
+  const [bids, setBids] = useState([]);
 
-/* ---------------- LOAD GIGS ---------------- */
+  /*-----------------------------------load handle----------------------------------*/
+
 useEffect(() => {
   if (!user) return;
 
@@ -41,8 +43,9 @@ useEffect(() => {
       const allBids = [];
 
       for (const gig of gigs) {
-        if (gig.createdBy === user._id) {
-          const res = await api.get(`/bids/${gig.id}`);
+        // ✅ use backend field names
+        if (gig.ownerId === user._id) {
+          const res = await api.get(`/bids/${gig._id}`);
           allBids.push(...res.data);
         }
       }
@@ -56,8 +59,6 @@ useEffect(() => {
   fetchBidsForOwnedGigs();
 }, [gigs, user]);
 
-
-  
   /* ---------------- AUTH HANDLERS ---------------- */
 
   const handleLogin = async () => {
@@ -82,68 +83,6 @@ useEffect(() => {
       alert(err.response?.data?.message || "Registration failed");
     }
   };
-
-  /* ---------------- ACTIONS ---------------- */
-
-  const createGig = async (title, desc, budget) => {
-  try {
-    const res = await api.post("/gigs", {
-      title,
-      description: desc,
-      budget: Number(budget),
-    });
-
-    setGigs(prev => [res.data, ...prev]);
-  } catch (err) {
-    alert(err.response?.data?.message || "Failed to create gig");
-  }
-};
-
-  
-/* ---------------- BID LOGIC ---------------- */
-
-const placeBid = async (gigId, message, amount) => {
-  try {
-    await api.post("/bids", {
-      gigId,
-      message,
-      amount,
-    });
-
-    alert("Bid placed successfully");
-
-    // refresh bids
-    const res = await api.get(`/bids/${gigId}`);
-    setBids(prev => [...prev, ...res.data]);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Failed to place bid");
-  }
-};
-
-const hireBid = async (bidId, gigId) => {
-  try {
-    await api.post(`/bids/${bidId}/hire`);
-
-    alert("🎉 Freelancer hired successfully");
-
-    // refresh gigs + bids
-    const gigsRes = await api.get("/gigs");
-    setGigs(gigsRes.data);
-
-    const bidsRes = await api.get(`/bids/${gigId}`);
-    setBids(bidsRes.data);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Hire failed");
-  }
-};
-
-/* ---------------- FILTERS ---------------- */
-
-const openGigs = gigs.filter(g => g.status === "open");
-const myBids = bids;
-
 
   /* ---------------- AUTH UI ---------------- */
 
@@ -176,6 +115,77 @@ const myBids = bids;
       </div>
     );
   }
+
+  /* ---------------- ACTIONS ---------------- */
+
+   const createGig = async (title, desc, budget) => {
+  try {
+    const res = await api.post("/gigs", {
+      title,
+      description: desc,
+      budget: Number(budget),
+    });
+
+    setGigs(prev => [res.data, ...prev]);
+  } catch (err) {
+    alert(err.response?.data?.message || "Failed to create gig");
+  }
+};
+
+  
+  const placeBid = (gigId, message, amount) => {
+    const gig = gigs.find(g => g.id === gigId);
+
+    if (gig.createdBy === user.email) {
+      alert("You can't place a bid on your own gig");
+      return;
+    }
+
+    setBids([
+      {
+        id: Date.now(),
+        gigId,
+        message,
+        amount,
+        bidder: user.email,
+        status: "pending"
+      },
+      ...bids
+    ]);
+
+    alert("Bid placed successfully");
+  };
+
+  const hireBid = (bidId, gigId) => {
+    const bid = bids.find(b => b.id === bidId);
+    const gig = gigs.find(g => g.id === gigId);
+
+    if (bid.bidder === user.email) {
+      alert("You cannot hire yourself");
+      return;
+    }
+
+    setBids(
+      bids.map(b =>
+        b.gigId === gigId
+          ? { ...b, status: b.id === bidId ? "hired" : "rejected" }
+          : b
+      )
+    );
+
+    setGigs(
+      gigs.map(g =>
+        g.id === gigId ? { ...g, hiredBidId: bidId } : g
+      )
+    );
+
+    alert("🎉 Congratulations! Freelancer hired successfully");
+  };
+
+  /* ---------------- FILTERS ---------------- */
+
+  const openGigs = gigs.filter(g => !g.hiredBidId);
+  const myBids = bids;
 
   /* ---------------- UI ---------------- */
 
@@ -218,10 +228,11 @@ const myBids = bids;
             <div className="right">
               <h3>OPEN GIGS</h3>
               {openGigs.map(gig => (
-                <div className="gig-card" key={gig._id}>
+                <div className="gig-card" key={gig.id}>
                   <h4>{gig.title}</h4>
-                  <p>{gig.description}</p>
+                  <p>{gig.desc}</p>
                   <strong>₹ {gig.budget}</strong>
+
                   <input placeholder="Bid message" id={`msg-${gig.id}`} />
                   <input placeholder="Bid amount" id={`amt-${gig.id}`} />
                   <button onClick={() =>
@@ -239,7 +250,7 @@ const myBids = bids;
           </div>
         )}
 
-       {page === "view-bids" && (
+        {page === "view-bids" && (
           <div className="page">
             <h2>Your Bids</h2>
             {myBids.map(b => (
@@ -257,43 +268,44 @@ const myBids = bids;
           </div>
         )}
 
-{page === "status" && (
-  <div className="page">
-    <h2>Status</h2>
-
-    {myBids.map(b => {
-      const gig = gigs.find(g => g._id === b.gigId);
-      const isCreator = gig?.ownerId === user._id;
-
-      return (
-        <div key={b._id} className={`bid-card ${b.status}`}>
-          <span className={`status-pill ${b.status}`}>
-            {b.status.toUpperCase()}
-          </span>
-
-          {isCreator && b.status === "pending" && (
-            <button onClick={() => hireBid(b._id, b.gigId)}>
-              Hire
-            </button>
-          )}
-        </div>
-      );
-    })}
-  </div>
-)}
-
-        
-        {page === "profile" && (
+        {page === "status" && (
           <div className="page">
-            <h2>Profile</h2>
-            <div className="profile-card">
-              <p><strong>Name:</strong> {user.name || "User"}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-            </div>
+            <h2>Status</h2>
+            {myBids.map(b => {
+              const gig = gigs.find(g => g.id === b.gigId);
+              const isCreator = gig?.createdBy === user.email;
+
+              return (
+                <div key={b.id} className={`bid-card ${b.status}`}>
+                  <span className={`status-pill ${b.status}`}>
+                    {b.status.toUpperCase()}
+                  </span>
+
+                  {isCreator && b.status === "pending" && (
+                    <button onClick={() => hireBid(b.id, b.gigId)}>
+                      Hire
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
-        
+
+       {page === "profile" && (
+  <div className="page">
+    <h2>Profile</h2>
+
+    <div className="profile-card">
+      <p><strong>Name:</strong> {user.name || "User"}</p>
+      <p><strong>Email:</strong> {user.email}</p>
+    </div>
+  </div>
+)}
+
+
+
        {page === "contact" && (
   <div className="page">
     <h2>Contact Us</h2>
@@ -328,11 +340,12 @@ const myBids = bids;
     </button>
   </div>
 )}
-  
+
+
+
       </div>
     </div>
   );
 }
 
-  
-
+ 

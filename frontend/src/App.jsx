@@ -20,11 +20,11 @@ export default function App() {
 
   /* ---------------- LOAD GIGS FROM BACKEND ---------------- */
   useEffect(() => {
-    if (!user) return;
-
-    api.get("/api/gigs")
-      .then(res => setGigs(res.data))
-      .catch(err => console.error("Failed to load gigs", err));
+    if (user) {
+      api.get("/gigs")
+        .then(res => setGigs(res.data))
+        .catch(err => console.error("Failed to load gigs", err));
+    }
   }, [user]);
 
   /* ---------------- AUTH HANDLERS ---------------- */
@@ -55,18 +55,19 @@ export default function App() {
   /* ---------------- ACTIONS ---------------- */
 
   const createGig = async (title, desc, budget) => {
-    try {
-      const res = await api.post("/api/gigs", {
-        title,
-        description: desc,
-        budget
-      });
+  try {
+    const res = await api.post("/gigs", {
+      title,
+      description: desc,
+      budget: Number(budget),
+    });
 
-      setGigs([res.data, ...gigs]);
-    } catch (err) {
-      alert("Failed to create gig");
-    }
-  };
+    setGigs(prev => [res.data, ...prev]);
+  } catch (err) {
+    alert(err.response?.data?.message || "Failed to create gig");
+  }
+};
+
 
   const placeBid = (gigId, message, amount) => {
     const gig = gigs.find(g => g._id === gigId);

@@ -32,7 +32,7 @@ export default function App() {
   }, [user]);
 
   /* ---------------- LOAD BIDS FOR GIG OWNER ---------------- */
- useEffect(() => {
+useEffect(() => {
   if (!user || gigs.length === 0) return;
 
   const fetchBidsForOwnedGigs = async () => {
@@ -40,8 +40,9 @@ export default function App() {
       const allBids = [];
 
       for (const gig of gigs) {
-        // ✅ correct normalized fields
+        // ✅ gig owner check (correct)
         if (gig.createdBy === user._id) {
+          // ✅ send correct Mongo gig id
           const res = await api.get(`/bids/${gig.id}`);
           allBids.push(...res.data);
         }
@@ -55,7 +56,6 @@ export default function App() {
 
   fetchBidsForOwnedGigs();
 }, [gigs, user]);
-
 
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
@@ -213,7 +213,8 @@ const placeBid = async (gigId, message, amount) => {
             <h2>Status</h2>
             {myBids.map(b => {
               const gig = gigs.find(g => g.id === b.gigId);
-              const isCreator = gig?.createdBy === user.email;
+             const isCreator = gig?.createdBy === user._id;
+
 
               return (
                 <div key={b.id} className={`bid-card ${b.status}`}>

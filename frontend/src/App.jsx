@@ -34,12 +34,27 @@ useEffect(() => {
 
 /* ---------------- LOAD MY BIDS (FREELANCER STATUS) ---------------- */
 useEffect(() => {
-  if (!user) return;
+  if (!user || gigs.length === 0) return;
 
-  api.get("/bids/my")
-    .then(res => setBids(res.data))
-    .catch(() => setBids([]));
-}, [user]);
+  const fetchBidsForOwnedGigs = async () => {
+    try {
+      const allBids = [];
+
+      for (const gig of gigs) {
+        if (gig.createdBy === user._id) {
+          const res = await api.get(`/bids/${gig.id}`);
+          allBids.push(...res.data);
+        }
+      }
+
+      setBids(allBids);
+    } catch (err) {
+      console.error("Failed to load bids for owner", err);
+    }
+  };
+
+  fetchBidsForOwnedGigs();
+}, [gigs, user]);
 
 
   
@@ -92,7 +107,7 @@ const placeBid = async (gigId, message, amount) => {
     await api.post("/bids", {
       gigId,
       message,
-      price: amount,
+      amount,
     });
 
     alert("Bid placed successfully");

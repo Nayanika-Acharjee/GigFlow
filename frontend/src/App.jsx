@@ -69,28 +69,30 @@ export default function App() {
 };
 
 
-  const placeBid = (gigId, message, amount) => {
-    const gig = gigs.find(g => g._id === gigId);
+ const placeBid = (gigId, message, amount) => {
+  const gig = gigs.find(g => g._id === gigId);
 
-    if (gig?.createdBy === user.email) {
-      alert("You can't place a bid on your own gig");
-      return;
-    }
+  // prevent owner from bidding
+  if (gig?.ownerId === user._id) {
+    alert("You can't place a bid on your own gig");
+    return;
+  }
 
-    setBids([
-      {
-        id: Date.now(),
-        gigId,
-        message,
-        amount,
-        bidder: user.email,
-        status: "pending"
-      },
-      ...bids
-    ]);
+  setBids([
+    {
+      id: Date.now(),
+      gigId,
+      message,
+      amount,
+      bidder: user.email,
+      status: "pending"
+    },
+    ...bids
+  ]);
 
-    alert("Bid placed successfully");
-  };
+  alert("Bid placed successfully");
+};
+
 
   const hireBid = (bidId, gigId) => {
     setBids(

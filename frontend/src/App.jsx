@@ -24,15 +24,42 @@ useEffect(() => {
     api.get("/gigs").then(res => {
       const normalized = res.data.map(g => ({
         ...g,
-        id: g._id,                 // 🔑 restore id
-        desc: g.description,       // 🔑 restore desc
-        createdBy: g.ownerId       // 🔑 restore createdBy
+        id: g._id,                 
+        desc: g.description,      
+        createdBy: g.ownerId       
       }));
       setGigs(normalized);
     });
   }
 }, [user]);
 
+useEffect(() => {
+  if (!user) return;
+
+  // fetch all bids for gigs owned by user
+  const fetchBids = async () => {
+    try {
+      const allBids = [];
+
+      for (const gig of gigs) {
+        if (gig.ownerId === user._id) {
+          const res = await api.get(`/bids/${gig._id}`);
+          allBids.push(...res.data);
+        }
+      }
+
+      setBids(allBids);
+    } catch (err) {
+      console.error("Failed to load bids");
+    }
+  };
+
+  fetchBids();
+}, [gigs, user]);
+
+
+
+  
   /* ---------------- AUTH HANDLERS ---------------- */
 
   const handleLogin = async () => {
@@ -77,62 +104,41 @@ useEffect(() => {
   
 /* ---------------- BID LOGIC ---------------- */
 
-const placeBid = (gigId, message, amount) => {
-  const gig = gigs.find(g => g._id === gigId);
-
-  // prevent bidding on own gig
-  if (gig?.ownerId === user._id) {
-    alert("You can't place a bid on your own gig");
-    return;
-  }
-
-  setBids([
-    {
-      _id: Date.now(),          // temp id (UI only)
+const placeBid = async (gigId, message, amount) => {
+  try {
+    await api.post("/bids", {
       gigId,
       message,
-      amount,
-      bidderId: user._id,
-      bidderEmail: user.email,
-      status: "pending",
-    },
-    ...bids,
-  ]);
+      price: amount,
+    });
 
-  alert("Bid placed successfully");
+    alert("Bid placed successfully");
+
+    // refresh bids
+    const res = await api.get(`/bids/${gigId}`);
+    setBids(prev => [...prev, ...res.data]);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Failed to place bid");
+  }
 };
 
-const hireBid = (bidId, gigId) => {
-  const bid = bids.find(b => b._id === bidId);
-  const gig = gigs.find(g => g._id === gigId);
+const hireBid = async (bidId, gigId) => {
+  try {
+    await api.post(`/bids/${bidId}/hire`);
 
-  // only gig owner can hire
-  if (gig?.ownerId !== user._id) {
-    alert("Only the gig owner can hire");
-    return;
+    alert("🎉 Freelancer hired successfully");
+
+    // refresh gigs + bids
+    const gigsRes = await api.get("/gigs");
+    setGigs(gigsRes.data);
+
+    const bidsRes = await api.get(`/bids/${gigId}`);
+    setBids(bidsRes.data);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Hire failed");
   }
-
-  // prevent hiring yourself
-  if (bid?.bidderId === user._id) {
-    alert("You cannot hire yourself");
-    return;
-  }
-
-  setBids(
-    bids.map(b =>
-      b.gigId === gigId
-        ? { ...b, status: b._id === bidId ? "hired" : "rejected" }
-        : b
-    )
-  );
-
-  setGigs(
-    gigs.map(g =>
-      g._id === gigId ? { ...g, status: "assigned" } : g
-    )
-  );
-
-  alert("🎉 Congratulations! Freelancer hired successfully");
 };
 
 /* ---------------- FILTERS ---------------- */

@@ -1,10 +1,10 @@
 import express from "express";
-import { protect } from "..auth.middleware.js";
+import { protect } from "./auth.middleware.js";
 import {  
   createGig,
   getMyGigs,
   getOpenGigs,
-} from "..gig.controller.js";
+} from "./gig.controller.js";
 
 const router = express.Router();
 

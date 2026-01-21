@@ -124,4 +124,15 @@ router.post("/:bidId/hire", protect, async (req, res) => {
   }
 });
 
+/**
+ * GET MY BIDS (Freelancer)
+ * GET /api/bids/my
+ */
+router.get("/my", protect, async (req, res) => {
+  const bids = await Bid.find({ bidderId: req.user._id })
+    .populate("gigId", "title status");
+
+  res.json(bids);
+});
+
 export default router;

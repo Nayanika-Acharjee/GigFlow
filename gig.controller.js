@@ -1,4 +1,4 @@
-import Gig from "..gig.js";
+import Gig from "./gig.js";
 
 /* ================= CREATE GIG ================= */
 export const createGig = async (req, res) => {

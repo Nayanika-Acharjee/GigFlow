@@ -15,6 +15,8 @@ export default function App() {
 
   const [gigs, setGigs] = useState([]);
   const [bids, setBids] = useState([]);
+  
+const [ownerBids, setOwnerBids] = useState([]);
 
   /* ---------------- LOAD GIGS ---------------- */
   useEffect(() => {
@@ -35,39 +37,26 @@ export default function App() {
 useEffect(() => {
   if (!user || gigs.length === 0) return;
 
-  const fetchBids = async () => {
+  const fetchOwnerBids = async () => {
     try {
-      let collectedBids = [];
+      const collected = [];
 
-      // 1️⃣ Freelancer: load my bids
-      const myBidsRes = await api.get("/bids/my");
-      collectedBids = myBidsRes.data;
-
-      // 2️⃣ Gig owner: load bids for owned gigs
       for (const gig of gigs) {
+        // only gigs created by this user
         if (gig.createdBy === user._id) {
           const res = await api.get(`/bids/${gig.id}`);
-          collectedBids.push(...res.data);
+          collected.push(...res.data);
         }
       }
 
-      // 3️⃣ Remove duplicates
-      const unique = Object.values(
-        collectedBids.reduce((acc, bid) => {
-          acc[bid._id] = bid;
-          return acc;
-        }, {})
-      );
-
-      setBids(unique);
+      setOwnerBids(collected);
     } catch (err) {
-      console.error("Failed to load bids", err);
-      setBids([]);
+      console.error("Failed to load owner bids");
     }
   };
 
-  fetchBids();
-}, [user, gigs]);
+  fetchOwnerBids();
+}, [gigs, user]);
 
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
@@ -123,7 +112,7 @@ const placeBid = async (gigId, message, amount) => {
     const res = await api.post("/bids", {
       gigId,
       message,
-      amount: Number(amount),
+      price: Number(amount),
     });
 
     // ✅ update UI with backend response
@@ -208,7 +197,7 @@ const placeBid = async (gigId, message, amount) => {
             {myBids.map(b => (
               <div key={b._id} className={`bid-card ${b.status}`}>
                 <p>{b.message}</p>
-                <strong>₹ {b.price}</strong>
+              <strong>₹ {b.price}</strong>
 
                 {b.status === "hired" && (
                   <p style={{ color: "green", fontWeight: "bold" }}>
@@ -223,7 +212,7 @@ const placeBid = async (gigId, message, amount) => {
         {page === "status" && (
           <div className="page">
             <h2>Status</h2>
-            {myBids.map(b => {
+            {ownerBids.map(b => {
               const gig = gigs.find(g => g.id === b.gigId);
              const isCreator = gig?.createdBy === user._id;
 
@@ -235,7 +224,7 @@ const placeBid = async (gigId, message, amount) => {
                   </span>
 
                   {isCreator && b.status === "pending" && (
-                    <button onClick={() => hireBid(b._id, b.gigId)}>
+                    <button onClick={() => hireBid(b._id, gig.Id)}>
                       Hire
                     </button>
                   )}

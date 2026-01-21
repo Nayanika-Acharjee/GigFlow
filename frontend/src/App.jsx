@@ -18,6 +18,16 @@ export default function App() {
   const [gigs, setGigs] = useState([]);
   const [bids, setBids] = useState([]);
 
+
+  useEffect(() => {
+  if (!user) return;
+
+  api.get("/gigs").then(res => setGigs(res.data));
+  api.get("/bids/my").then(res => setBids(res.data));
+}, [user]);
+
+
+
   /* ---------------- LOAD GIGS FROM BACKEND ---------------- */
 useEffect(() => {
   if (user) {

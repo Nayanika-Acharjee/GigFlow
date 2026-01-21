@@ -112,29 +112,25 @@ useEffect(() => {
 
 const placeBid = async (gigId, message, amount) => {
   try {
-    const gig = gigs.find(g => g.id === gigId);
-
-    // ✅ correct ownership check
-    if (gig.createdBy === user._id) {
-      alert("You can't place a bid on your own gig");
-      return;
-    }
-
-    // ✅ REAL backend call (this stores cookie + DB)
     const res = await api.post("/bids", {
       gigId,
       message,
-      price: Number(amount),
+      amount: Number(amount),
     });
 
-    // ✅ update UI with backend response
-    setBids(prev => [res.data, ...prev]);
+    const newBid = {
+      ...res.data,
+      id: res.data._id,   // normalize
+    };
+
+    setBids(prev => [newBid, ...prev]);
 
     alert("✅ Bid placed successfully");
   } catch (err) {
     alert(err.response?.data?.message || "Failed to place bid");
   }
 };
+
 
   /*-----------FILTERS--------------------*/
   const openGigs = gigs.filter(g => g.status !== "assigned");

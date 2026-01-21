@@ -69,6 +69,11 @@ useEffect(() => {
   fetchOwnerBids();
 }, [gigs, user]);
 
+
+  useEffect(() => {
+  console.log("BIDS STATE →", bids);
+}, [bids]);
+
   
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
@@ -205,7 +210,7 @@ const placeBid = async (gigId, message, amount) => {
             {myBids.map(b => (
               <div key={b._id} className={`bid-card ${b.status}`}>
                 <p>{b.message}</p>
-              <strong>₹ {b.price}</strong>
+              <strong>₹ {b.amount}</strong>
 
                 {b.status === "hired" && (
                   <p style={{ color: "green", fontWeight: "bold" }}>

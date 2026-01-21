@@ -19,13 +19,19 @@ export default function App() {
   const [bids, setBids] = useState([]);
 
   /* ---------------- LOAD GIGS FROM BACKEND ---------------- */
-  useEffect(() => {
-    if (user) {
-      api.get("/gigs")
-        .then(res => setGigs(res.data))
-        .catch(err => console.error("Failed to load gigs", err));
-    }
-  }, [user]);
+useEffect(() => {
+  if (user) {
+    api.get("/gigs").then(res => {
+      const normalized = res.data.map(g => ({
+        ...g,
+        id: g._id,                 // 🔑 restore id
+        desc: g.description,       // 🔑 restore desc
+        createdBy: g.ownerId       // 🔑 restore createdBy
+      }));
+      setGigs(normalized);
+    });
+  }
+}, [user]);
 
   /* ---------------- AUTH HANDLERS ---------------- */
 
@@ -69,54 +75,62 @@ export default function App() {
 };
 
   
- const placeBid = (gigId, message, amount) => {
-    const gig = gigs.find(g => g.id === gigId);
+const placeBid = (gigId, message, amount) => {
+  const gig = gigs.find(g => g.id === gigId);
 
-    if (gig.createdBy === user.email) {
-      alert("You can't place a bid on your own gig");
-      return;
-    }
+  if (gig?.createdBy === user._id) {
+    alert("You can't place a bid on your own gig");
+    return;
+  }
 
-    setBids([
-      {
-        id: Date.now(),
-        gigId,
-        message,
-        amount,
-        bidder: user.email,
-        status: "pending"
-      },
-      ...bids
-    ]);
+  setBids([
+    {
+      id: Date.now(),
+      gigId,
+      message,
+      amount,
+      bidder: user.email,
+      status: "pending"
+    },
+    ...bids
+  ]);
 
-    alert("Bid placed successfully");
-  };
+  alert("Bid placed successfully");
+};
 
-  const hireBid = (bidId, gigId) => {
-    const bid = bids.find(b => b.id === bidId);
-    const gig = gigs.find(g => g.id === gigId);
 
-    if (bid.bidder === user.email) {
-      alert("You cannot hire yourself");
-      return;
-    }
+ const hireBid = (bidId, gigId) => {
+  const bid = bids.find(b => b.id === bidId);
+  const gig = gigs.find(g => g.id === gigId);
 
-    setBids(
-      bids.map(b =>
-        b.gigId === gigId
-          ? { ...b, status: b.id === bidId ? "hired" : "rejected" }
-          : b
-      )
-    );
+  // only gig creator can hire
+  if (gig?.createdBy !== user._id) {
+    alert("Only the gig owner can hire");
+    return;
+  }
 
-    setGigs(
-      gigs.map(g =>
-        g.id === gigId ? { ...g, hiredBidId: bidId } : g
-      )
-    );
+  // prevent hiring yourself
+  if (bid?.bidder === user.email) {
+    alert("You cannot hire yourself");
+    return;
+  }
 
-    alert("🎉 Congratulations! Freelancer hired successfully");
-  };
+  setBids(
+    bids.map(b =>
+      b.gigId === gigId
+        ? { ...b, status: b.id === bidId ? "hired" : "rejected" }
+        : b
+    )
+  );
+
+  setGigs(
+    gigs.map(g =>
+      g.id === gigId ? { ...g, hiredBidId: bidId } : g
+    )
+  );
+
+  alert("🎉 Congratulations! Freelancer hired successfully");
+};
 
  
   /* ---------------- FILTERS ---------------- */

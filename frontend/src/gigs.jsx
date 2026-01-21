@@ -6,7 +6,9 @@ export default function Gigs() {
   const [gigs, setGigs] = useState([]);
 
   useEffect(() => {
-    api.get("/gigs").then(res => setGigs(res.data));
+    api.get("/api/gigs")   // ✅ FIXED
+      .then(res => setGigs(res.data))
+      .catch(err => console.error(err));
   }, []);
 
   return (

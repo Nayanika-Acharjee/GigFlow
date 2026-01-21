@@ -32,28 +32,30 @@ export default function App() {
   }, [user]);
 
   /* ---------------- LOAD BIDS FOR GIG OWNER ---------------- */
-  useEffect(() => {
-    if (!user || gigs.length === 0) return;
+ useEffect(() => {
+  if (!user || gigs.length === 0) return;
 
-    const fetchBids = async () => {
-      try {
-        const allBids = [];
+  const fetchBidsForOwnedGigs = async () => {
+    try {
+      const allBids = [];
 
-        for (const gig of gigs) {
-          if (gig.createdBy === user._id) {
-            const res = await api.get(`/bids/${gig.id}`);
-            allBids.push(...res.data);
-          }
+      for (const gig of gigs) {
+        // ✅ correct normalized fields
+        if (gig.createdBy === user._id) {
+          const res = await api.get(`/bids/${gig.id}`);
+          allBids.push(...res.data);
         }
-
-        setBids(allBids);
-      } catch (err) {
-        console.error("Failed to load bids", err);
       }
-    };
 
-    fetchBids();
-  }, [gigs, user]);
+      setBids(allBids);
+    } catch (err) {
+      console.error("Failed to load bids for owner", err);
+    }
+  };
+
+  fetchBidsForOwnedGigs();
+}, [gigs, user]);
+
 
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
@@ -95,32 +97,31 @@ export default function App() {
     setGigs(prev => [{ ...res.data, id: res.data._id, desc, createdBy: user._id }, ...prev]);
   };
 
-  const placeBid = async (gigId, message, amount) => {
+const placeBid = async (gigId, message, amount) => {
+  try {
     const gig = gigs.find(g => g.id === gigId);
-    if (gig.createdBy === user._id) return alert("You can't bid on your own gig");
 
+    // ✅ correct ownership check
+    if (gig.createdBy === user._id) {
+      alert("You can't place a bid on your own gig");
+      return;
+    }
+
+    // ✅ REAL backend call (this stores cookie + DB)
     const res = await api.post("/bids", {
       gigId,
       message,
-      price: amount
+      amount: Number(amount),
     });
 
+    // ✅ update UI with backend response
     setBids(prev => [res.data, ...prev]);
-  };
 
-  const hireBid = async (bidId, gigId) => {
-    await api.post(`/bids/${bidId}/hire`);
-
-    setBids(bids.map(b =>
-      b.gigId === gigId
-        ? { ...b, status: b._id === bidId ? "hired" : "rejected" }
-        : b
-    ));
-
-    setGigs(gigs.map(g =>
-      g.id === gigId ? { ...g, status: "assigned" } : g
-    ));
-  };
+    alert("✅ Bid placed successfully");
+  } catch (err) {
+    alert(err.response?.data?.message || "Failed to place bid");
+  }
+};
 
   /*-----------FILTERS--------------------*/
   const openGigs = gigs.filter(g => g.status !== "assigned");

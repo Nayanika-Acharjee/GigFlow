@@ -42,22 +42,34 @@ useEffect(() => {
       const collected = [];
 
       for (const gig of gigs) {
-        // only gigs created by this user
+        // ✅ only gigs created by this user
         if (gig.createdBy === user._id) {
           const res = await api.get(`/bids/${gig.id}`);
-          collected.push(...res.data);
+
+          // ✅ NORMALIZE bids for frontend
+          const normalized = res.data.map(b => ({
+            ...b,                 // keep status, amount, message
+            id: b._id,            // frontend needs `id`
+            gigId: b.gigId,
+            bidderId: b.bidderId,
+          }));
+
+          collected.push(...normalized);
         }
       }
 
       setOwnerBids(collected);
+      console.log("OWNER BIDS:", collected);
+
     } catch (err) {
-      console.error("Failed to load owner bids");
+      console.error("Failed to load owner bids", err);
     }
   };
 
   fetchOwnerBids();
 }, [gigs, user]);
 
+  
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
     await login(email, password);
@@ -224,7 +236,7 @@ const placeBid = async (gigId, message, amount) => {
                   </span>
 
                   {isCreator && b.status === "pending" && (
-                    <button onClick={() => hireBid(b._id, gig.Id)}>
+                    <button onClick={() => hireBid(b._id, b.gigId)}>
                       Hire
                     </button>
                   )}

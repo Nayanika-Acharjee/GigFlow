@@ -14,59 +14,32 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  // app data
-  const [gigs, setGigs] = useState([]);
-  const [bids, setBids] = useState([]);
+const [gigs, setGigs] = useState([]);
+const [bids, setBids] = useState([]);
 
-
-  useEffect(() => {
-  if (!user) return;
-
-  api.get("/gigs").then(res => setGigs(res.data));
-  api.get("/bids/my").then(res => setBids(res.data));
-}, [user]);
-
-
-
-  /* ---------------- LOAD GIGS FROM BACKEND ---------------- */
-useEffect(() => {
-  if (user) {
-    api.get("/gigs").then(res => {
-      const normalized = res.data.map(g => ({
-        ...g,
-        id: g._id,                 
-        desc: g.description,      
-        createdBy: g.ownerId       
-      }));
-      setGigs(normalized);
-    });
-  }
-}, [user]);
-
+/* ---------------- LOAD GIGS ---------------- */
 useEffect(() => {
   if (!user) return;
 
-  // fetch all bids for gigs owned by user
-  const fetchBids = async () => {
-    try {
-      const allBids = [];
+  api.get("/gigs").then(res => {
+    const normalized = res.data.map(g => ({
+      ...g,
+      id: g._id,           // for frontend logic
+      desc: g.description,
+      createdBy: g.ownerId // for ownership checks
+    }));
+    setGigs(normalized);
+  });
+}, [user]);
 
-      for (const gig of gigs) {
-        if (gig.ownerId === user._id) {
-          const res = await api.get(`/bids/${gig._id}`);
-          allBids.push(...res.data);
-        }
-      }
+/* ---------------- LOAD MY BIDS (FREELANCER STATUS) ---------------- */
+useEffect(() => {
+  if (!user) return;
 
-      setBids(allBids);
-    } catch (err) {
-      console.error("Failed to load bids");
-    }
-  };
-
-  fetchBids();
-}, [gigs, user]);
-
+  api.get("/bids/my")
+    .then(res => setBids(res.data))
+    .catch(() => setBids([]));
+}, [user]);
 
 
   
@@ -269,11 +242,11 @@ const myBids = bids;
           </div>
         )}
 
-        {page === "status" && (
+{page === "status" && (
   <div className="page">
     <h2>Status</h2>
 
-    {myBids.map(b => {
+    {Bids.map(b => {
       const gig = gigs.find(g => g._id === b.gigId);
       const isCreator = gig?.ownerId === user._id;
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import api from "./axios";
 import "./App.css";
@@ -9,107 +9,80 @@ export default function App() {
   const [page, setPage] = useState("login");
   const [authMode, setAuthMode] = useState("login");
 
-  // auth fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  // app data
   const [gigs, setGigs] = useState([]);
   const [bids, setBids] = useState([]);
 
-  /*-----------------------------------load handle----------------------------------*/
+  /* ---------------- LOAD GIGS ---------------- */
+  useEffect(() => {
+    if (!user) return;
 
-useEffect(() => {
-  if (!user) return;
+    api.get("/gigs").then(res => {
+      const normalized = res.data.map(g => ({
+        ...g,
+        id: g._id,
+        desc: g.description,
+        createdBy: g.ownerId
+      }));
+      setGigs(normalized);
+    });
+  }, [user]);
 
-  api.get("/gigs").then(res => {
-    const normalized = res.data.map(g => ({
-      ...g,
-      id: g._id,           // for frontend logic
-      desc: g.description,
-      createdBy: g.ownerId // for ownership checks
-    }));
-    setGigs(normalized);
-  });
-}, [user]);
+  /* ---------------- LOAD BIDS FOR GIG OWNER ---------------- */
+  useEffect(() => {
+    if (!user || gigs.length === 0) return;
 
-/* ---------------- LOAD MY BIDS (FREELANCER STATUS) ---------------- */
-useEffect(() => {
-  if (!user || gigs.length === 0) return;
+    const fetchBids = async () => {
+      try {
+        const allBids = [];
 
-  const fetchBidsForOwnedGigs = async () => {
-    try {
-      const allBids = [];
-
-      for (const gig of gigs) {
-        // ✅ use backend field names
-        if (gig.ownerId === user._id) {
-          const res = await api.get(`/bids/${gig._id}`);
-          allBids.push(...res.data);
+        for (const gig of gigs) {
+          if (gig.createdBy === user._id) {
+            const res = await api.get(`/bids/${gig.id}`);
+            allBids.push(...res.data);
+          }
         }
+
+        setBids(allBids);
+      } catch (err) {
+        console.error("Failed to load bids", err);
       }
+    };
 
-      setBids(allBids);
-    } catch (err) {
-      console.error("Failed to load bids for owner", err);
-    }
-  };
-
-  fetchBidsForOwnedGigs();
-}, [gigs, user]);
+    fetchBids();
+  }, [gigs, user]);
 
   /* ---------------- AUTH HANDLERS ---------------- */
-
   const handleLogin = async () => {
-    try {
-      await login(email, password);
-      setPage("home");
-    } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
-    }
+    await login(email, password);
+    setPage("home");
   };
 
   const handleRegister = async () => {
-    try {
-      if (password !== confirm) {
-        alert("Passwords do not match");
-        return;
-      }
-      const name = email.split("@")[0];
-      await register(name, email, password);
-      setPage("home");
-    } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
-    }
+    if (password !== confirm) return alert("Passwords do not match");
+    const name = email.split("@")[0];
+    await register(name, email, password);
+    setPage("home");
   };
-
-  /* ---------------- AUTH UI ---------------- */
 
   if (!user) {
     return (
       <div className="auth-center">
         <div className="auth-card">
           <h2>{authMode === "login" ? "Login" : "Register"}</h2>
-
-          <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-
+          <input value={email} onChange={e => setEmail(e.target.value)} />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
           {authMode === "register" && (
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-            />
+            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} />
           )}
-
           <button onClick={authMode === "login" ? handleLogin : handleRegister}>
-            {authMode === "login" ? "Login" : "Register"}
+            {authMode}
           </button>
-
-          <button className="link" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
-            {authMode === "login" ? "New user? Register" : "Already have an account?"}
+          <button onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
+            Switch
           </button>
         </div>
       </div>
@@ -117,74 +90,40 @@ useEffect(() => {
   }
 
   /* ---------------- ACTIONS ---------------- */
+  const createGig = async (title, desc, budget) => {
+    const res = await api.post("/gigs", { title, description: desc, budget });
+    setGigs(prev => [{ ...res.data, id: res.data._id, desc, createdBy: user._id }, ...prev]);
+  };
 
-   const createGig = async (title, desc, budget) => {
-  try {
-    const res = await api.post("/gigs", {
-      title,
-      description: desc,
-      budget: Number(budget),
+  const placeBid = async (gigId, message, amount) => {
+    const gig = gigs.find(g => g.id === gigId);
+    if (gig.createdBy === user._id) return alert("You can't bid on your own gig");
+
+    const res = await api.post("/bids", {
+      gigId,
+      message,
+      price: amount
     });
 
-    setGigs(prev => [res.data, ...prev]);
-  } catch (err) {
-    alert(err.response?.data?.message || "Failed to create gig");
-  }
-};
-
-  
-  const placeBid = (gigId, message, amount) => {
-    const gig = gigs.find(g => g.id === gigId);
-
-    if (gig.createdBy === user.email) {
-      alert("You can't place a bid on your own gig");
-      return;
-    }
-
-    setBids([
-      {
-        id: Date.now(),
-        gigId,
-        message,
-        amount,
-        bidder: user.email,
-        status: "pending"
-      },
-      ...bids
-    ]);
-
-    alert("Bid placed successfully");
+    setBids(prev => [res.data, ...prev]);
   };
 
-  const hireBid = (bidId, gigId) => {
-    const bid = bids.find(b => b.id === bidId);
-    const gig = gigs.find(g => g.id === gigId);
+  const hireBid = async (bidId, gigId) => {
+    await api.post(`/bids/${bidId}/hire`);
 
-    if (bid.bidder === user.email) {
-      alert("You cannot hire yourself");
-      return;
-    }
+    setBids(bids.map(b =>
+      b.gigId === gigId
+        ? { ...b, status: b._id === bidId ? "hired" : "rejected" }
+        : b
+    ));
 
-    setBids(
-      bids.map(b =>
-        b.gigId === gigId
-          ? { ...b, status: b.id === bidId ? "hired" : "rejected" }
-          : b
-      )
-    );
-
-    setGigs(
-      gigs.map(g =>
-        g.id === gigId ? { ...g, hiredBidId: bidId } : g
-      )
-    );
-
-    alert("🎉 Congratulations! Freelancer hired successfully");
+    setGigs(gigs.map(g =>
+      g.id === gigId ? { ...g, status: "assigned" } : g
+    ));
   };
 
-  /* ---------------- FILTERS ---------------- */
-
-  const openGigs = gigs.filter(g => !g.hiredBidId);
+  /*-----------FILTERS--------------------*/
+  const openGigs = gigs.filter(g => g.status !== "assigned");
   const myBids = bids;
 
   /* ---------------- UI ---------------- */

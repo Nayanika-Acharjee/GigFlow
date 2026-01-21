@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
+import api from "./api/axios";
 import "./App.css";
 
 export default function App() {
@@ -16,6 +17,15 @@ export default function App() {
   // app data
   const [gigs, setGigs] = useState([]);
   const [bids, setBids] = useState([]);
+
+  /* ---------------- LOAD GIGS FROM BACKEND ---------------- */
+  useEffect(() => {
+    if (!user) return;
+
+    api.get("/api/gigs")
+      .then(res => setGigs(res.data))
+      .catch(err => console.error("Failed to load gigs", err));
+  }, [user]);
 
   /* ---------------- AUTH HANDLERS ---------------- */
 
@@ -41,6 +51,62 @@ export default function App() {
       alert(err.response?.data?.message || "Registration failed");
     }
   };
+
+  /* ---------------- ACTIONS ---------------- */
+
+  const createGig = async (title, desc, budget) => {
+    try {
+      const res = await api.post("/api/gigs", {
+        title,
+        description: desc,
+        budget
+      });
+
+      setGigs([res.data, ...gigs]);
+    } catch (err) {
+      alert("Failed to create gig");
+    }
+  };
+
+  const placeBid = (gigId, message, amount) => {
+    const gig = gigs.find(g => g._id === gigId);
+
+    if (gig?.createdBy === user.email) {
+      alert("You can't place a bid on your own gig");
+      return;
+    }
+
+    setBids([
+      {
+        id: Date.now(),
+        gigId,
+        message,
+        amount,
+        bidder: user.email,
+        status: "pending"
+      },
+      ...bids
+    ]);
+
+    alert("Bid placed successfully");
+  };
+
+  const hireBid = (bidId, gigId) => {
+    setBids(
+      bids.map(b =>
+        b.gigId === gigId
+          ? { ...b, status: b.id === bidId ? "hired" : "rejected" }
+          : b
+      )
+    );
+
+    alert("🎉 Congratulations! Freelancer hired successfully");
+  };
+
+  /* ---------------- FILTERS ---------------- */
+
+  const openGigs = gigs.filter(g => g.status === "open");
+  const myBids = bids;
 
   /* ---------------- AUTH UI ---------------- */
 
@@ -73,76 +139,6 @@ export default function App() {
       </div>
     );
   }
-
-  /* ---------------- ACTIONS ---------------- */
-
-  const createGig = (title, desc, budget) => {
-    setGigs([
-      {
-        id: Date.now(),
-        title,
-        desc,
-        budget,
-        createdBy: user.email,
-        hiredBidId: null
-      },
-      ...gigs
-    ]);
-  };
-
-  const placeBid = (gigId, message, amount) => {
-    const gig = gigs.find(g => g.id === gigId);
-
-    if (gig.createdBy === user.email) {
-      alert("You can't place a bid on your own gig");
-      return;
-    }
-
-    setBids([
-      {
-        id: Date.now(),
-        gigId,
-        message,
-        amount,
-        bidder: user.email,
-        status: "pending"
-      },
-      ...bids
-    ]);
-
-    alert("Bid placed successfully");
-  };
-
-  const hireBid = (bidId, gigId) => {
-    const bid = bids.find(b => b.id === bidId);
-    const gig = gigs.find(g => g.id === gigId);
-
-    if (bid.bidder === user.email) {
-      alert("You cannot hire yourself");
-      return;
-    }
-
-    setBids(
-      bids.map(b =>
-        b.gigId === gigId
-          ? { ...b, status: b.id === bidId ? "hired" : "rejected" }
-          : b
-      )
-    );
-
-    setGigs(
-      gigs.map(g =>
-        g.id === gigId ? { ...g, hiredBidId: bidId } : g
-      )
-    );
-
-    alert("🎉 Congratulations! Freelancer hired successfully");
-  };
-
-  /* ---------------- FILTERS ---------------- */
-
-  const openGigs = gigs.filter(g => !g.hiredBidId);
-  const myBids = bids;
 
   /* ---------------- UI ---------------- */
 
@@ -185,11 +181,10 @@ export default function App() {
             <div className="right">
               <h3>OPEN GIGS</h3>
               {openGigs.map(gig => (
-                <div className="gig-card" key={gig.id}>
+                <div className="gig-card" key={gig._id}>
                   <h4>{gig.title}</h4>
-                  <p>{gig.desc}</p>
+                  <p>{gig.description}</p>
                   <strong>₹ {gig.budget}</strong>
-
                   <input placeholder="Bid message" id={`msg-${gig.id}`} />
                   <input placeholder="Bid amount" id={`amt-${gig.id}`} />
                   <button onClick={() =>
@@ -207,62 +202,17 @@ export default function App() {
           </div>
         )}
 
-        {page === "view-bids" && (
+        {page === "profile" && (
           <div className="page">
-            <h2>Your Bids</h2>
-            {myBids.map(b => (
-              <div key={b.id} className={`bid-card ${b.status}`}>
-                <p>{b.message}</p>
-                <strong>₹ {b.amount}</strong>
-
-                {b.status === "hired" && (
-                  <p style={{ color: "green", fontWeight: "bold" }}>
-                    🎉 Congratulations! You got hired!
-                  </p>
-                )}
-              </div>
-            ))}
+            <h2>Profile</h2>
+            <div className="profile-card">
+              <p><strong>Name:</strong> {user.name || "User"}</p>
+              <p><strong>Email:</strong> {user.email}</p>
+            </div>
           </div>
         )}
 
-        {page === "status" && (
-          <div className="page">
-            <h2>Status</h2>
-            {myBids.map(b => {
-              const gig = gigs.find(g => g.id === b.gigId);
-              const isCreator = gig?.createdBy === user.email;
-
-              return (
-                <div key={b.id} className={`bid-card ${b.status}`}>
-                  <span className={`status-pill ${b.status}`}>
-                    {b.status.toUpperCase()}
-                  </span>
-
-                  {isCreator && b.status === "pending" && (
-                    <button onClick={() => hireBid(b.id, b.gigId)}>
-                      Hire
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-
-       {page === "profile" && (
-  <div className="page">
-    <h2>Profile</h2>
-
-    <div className="profile-card">
-      <p><strong>Name:</strong> {user.name || "User"}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-    </div>
-  </div>
-)}
-
-
-
+        
        {page === "contact" && (
   <div className="page">
     <h2>Contact Us</h2>
@@ -297,9 +247,7 @@ export default function App() {
     </button>
   </div>
 )}
-
-
-
+  
       </div>
     </div>
   );

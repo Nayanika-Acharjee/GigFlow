@@ -35,27 +35,39 @@ export default function App() {
 useEffect(() => {
   if (!user || gigs.length === 0) return;
 
-  const fetchBidsForOwnedGigs = async () => {
+  const fetchBids = async () => {
     try {
-      const allBids = [];
+      let collectedBids = [];
 
+      // 1️⃣ Freelancer: load my bids
+      const myBidsRes = await api.get("/bids/my");
+      collectedBids = myBidsRes.data;
+
+      // 2️⃣ Gig owner: load bids for owned gigs
       for (const gig of gigs) {
-        // ✅ gig owner check (correct)
         if (gig.createdBy === user._id) {
-          // ✅ send correct Mongo gig id
           const res = await api.get(`/bids/${gig.id}`);
-          allBids.push(...res.data);
+          collectedBids.push(...res.data);
         }
       }
 
-      setBids(allBids);
+      // 3️⃣ Remove duplicates
+      const unique = Object.values(
+        collectedBids.reduce((acc, bid) => {
+          acc[bid._id] = bid;
+          return acc;
+        }, {})
+      );
+
+      setBids(unique);
     } catch (err) {
-      console.error("Failed to load bids for owner", err);
+      console.error("Failed to load bids", err);
+      setBids([]);
     }
   };
 
-  fetchBidsForOwnedGigs();
-}, [gigs, user]);
+  fetchBids();
+}, [user, gigs]);
 
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
@@ -194,9 +206,9 @@ const placeBid = async (gigId, message, amount) => {
           <div className="page">
             <h2>Your Bids</h2>
             {myBids.map(b => (
-              <div key={b.id} className={`bid-card ${b.status}`}>
+              <div key={b._id} className={`bid-card ${b.status}`}>
                 <p>{b.message}</p>
-                <strong>₹ {b.amount}</strong>
+                <strong>₹ {b.price}</strong>
 
                 {b.status === "hired" && (
                   <p style={{ color: "green", fontWeight: "bold" }}>
@@ -217,13 +229,13 @@ const placeBid = async (gigId, message, amount) => {
 
 
               return (
-                <div key={b.id} className={`bid-card ${b.status}`}>
+                <div key={b._id} className={`bid-card ${b.status}`}>
                   <span className={`status-pill ${b.status}`}>
                     {b.status.toUpperCase()}
                   </span>
 
                   {isCreator && b.status === "pending" && (
-                    <button onClick={() => hireBid(b.id, b.gigId)}>
+                    <button onClick={() => hireBid(b._id, b.gigId)}>
                       Hire
                     </button>
                   )}

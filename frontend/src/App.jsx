@@ -34,7 +34,7 @@ const [ownerBids, setOwnerBids] = useState([]);
   }, [user]);
 
   /* ---------------- LOAD BIDS FOR GIG OWNER ---------------- */
- useEffect(() => {
+useEffect(() => {
   if (!user || gigs.length === 0) return;
 
   const fetchOwnerBids = async () => {
@@ -42,27 +42,26 @@ const [ownerBids, setOwnerBids] = useState([]);
       const collected = [];
 
       for (const gig of gigs) {
-        const gigOwnerId =
-          typeof gig.createdBy === "object"
-            ? gig.createdBy._id
-            : gig.createdBy;
+        // ✅ owner check
+        if (gig.createdBy?.toString() === user._id?.toString()) {
+          
+          // ✅ ALWAYS use string gig id
+          const gigId =
+            typeof gig.id === "object" ? gig.id._id : gig.id;
 
-        // ✅ strict owner check
-        if (gigOwnerId === user._id) {
-          const res = await api.get(`/bids/${gig.id}`);
+          const res = await api.get(`/bids/${gigId}`);
 
           const normalized = res.data.map(b => ({
             ...b,
             id: b._id,
-            gigId:
-              typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+            gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
           }));
 
           collected.push(...normalized);
         }
       }
 
-      setOwnerBids(collected); // ✅ single clean set
+      setBids(collected);   // ✅ IMPORTANT: setBids, not ownerBids
       console.log("OWNER BIDS →", collected);
     } catch (err) {
       console.error("Failed to load owner bids", err);
@@ -70,7 +69,7 @@ const [ownerBids, setOwnerBids] = useState([]);
   };
 
   fetchOwnerBids();
-}, [user, gigs]);
+}, [gigs, user]);
 
   
 /*----------freelancer part-----------*/

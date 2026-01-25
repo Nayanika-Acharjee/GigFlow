@@ -14,8 +14,10 @@ export default function App() {
   const [confirm, setConfirm] = useState("");
 
   const [gigs, setGigs] = useState([]);
-  const [bids, setBids] = useState([]);
+ 
   
+const [myBids, setMyBids] = useState([]);       // freelancer bids
+const [ownerBids, setOwnerBids] = useState([]); // bids on my gigs
 
 
   /* ---------------- LOAD GIGS ---------------- */
@@ -37,47 +39,65 @@ export default function App() {
 useEffect(() => {
   if (!user || gigs.length === 0) return;
 
-  const loadAllBids = async () => {
+  const fetchOwnerBids = async () => {
     try {
-      let collected = [];
+      const collected = [];
 
-      // 👑 GIG OWNER: bids on gigs I created
       for (const gig of gigs) {
         if (String(gig.createdBy) === String(user._id)) {
           const res = await api.get(`/bids/${gig.id}`);
 
-          collected.push(
-            ...res.data.map(b => ({
-              ...b,
-              id: b._id,
-              gigId:
-                typeof b.gigId === "object" ? b.gigId._id : b.gigId,
-            }))
-          );
+          const normalized = res.data.map(b => ({
+            ...b,
+            id: b._id,
+            gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+          }));
+
+          collected.push(...normalized);
         }
       }
 
-      // 👷 FREELANCER: my own bids
-      const myRes = await api.get("/bids/my");
-      collected.push(
-        ...myRes.data.map(b => ({
-          ...b,
-          id: b._id,
-          gigId:
-            typeof b.gigId === "object" ? b.gigId._id : b.gigId,
-        }))
-      );
-
-      setBids(collected);
-      console.log("ALL BIDS (owner + freelancer) →", collected);
+      setOwnerBids(collected);
+      console.log("OWNER BIDS →", collected);
     } catch (err) {
-      console.error("Failed to load bids", err);
+      console.error("Failed to load owner bids", err);
     }
   };
 
-  loadAllBids();
+  fetchOwnerBids();
 }, [gigs, user]);
-  
+
+/*----------freelancer part-----------*/
+
+ useEffect(() => {
+  if (!user) return;
+
+  api.get("/bids/my")
+    .then(res => {
+      const normalized = res.data.map(b => ({
+        ...b,
+        id: b._id,
+        gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+      }));
+
+      setMyBids(normalized);
+      console.log("MY BIDS →", normalized);
+    })
+    .catch(err => {
+      console.error("Failed to load my bids", err);
+      setMyBids([]);
+    });
+}, [user]);
+
+useEffect(() => {
+  console.log("MY BIDS STATE →", myBids);
+}, [myBids]);
+
+useEffect(() => {
+  console.log("OWNER BIDS STATE →", ownerBids);
+}, [ownerBids]);
+
+
  console.log("STATUS BIDS:", bids);
  
 

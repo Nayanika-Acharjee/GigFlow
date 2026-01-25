@@ -34,7 +34,7 @@ const [ownerBids, setOwnerBids] = useState([]);
   }, [user]);
 
   /* ---------------- LOAD BIDS FOR GIG OWNER ---------------- */
-useEffect(() => {
+ useEffect(() => {
   if (!user || gigs.length === 0) return;
 
   const fetchOwnerBids = async () => {
@@ -42,21 +42,27 @@ useEffect(() => {
       const collected = [];
 
       for (const gig of gigs) {
-        // ✅ FIXED owner check
-        if (gig.createdBy?.toString() === user._id?.toString()) {
+        const gigOwnerId =
+          typeof gig.createdBy === "object"
+            ? gig.createdBy._id
+            : gig.createdBy;
+
+        // ✅ strict owner check
+        if (gigOwnerId === user._id) {
           const res = await api.get(`/bids/${gig.id}`);
 
           const normalized = res.data.map(b => ({
-            ...b,        // keep status, amount, message
-            id: b._id,   // frontend id
-            gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+            ...b,
+            id: b._id,
+            gigId:
+              typeof b.gigId === "object" ? b.gigId._id : b.gigId,
           }));
 
           collected.push(...normalized);
         }
       }
 
-      setOwnerBids(collected);
+      setOwnerBids(collected); // ✅ single clean set
       console.log("OWNER BIDS →", collected);
     } catch (err) {
       console.error("Failed to load owner bids", err);
@@ -64,7 +70,7 @@ useEffect(() => {
   };
 
   fetchOwnerBids();
-}, [gigs, user]);
+}, [user, gigs]);
 
   
 /*----------freelancer part-----------*/
@@ -77,6 +83,7 @@ useEffect(() => {
       const normalized = res.data.map(b => ({
         ...b,
         id: b._id,
+        gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
       }));
 
       setBids(normalized);
@@ -229,6 +236,10 @@ const placeBid = async (gigId, message, amount) => {
                 <p>{b.message}</p>
               <strong>₹ {b.amount}</strong>
 
+                <span className={`status-pill ${b.status}`}>
+                 {b.status.toUpperCase()}
+                   </span>
+
                 {b.status === "hired" && (
                   <p style={{ color: "green", fontWeight: "bold" }}>
                     🎉 Congratulations! You got hired!
@@ -239,29 +250,34 @@ const placeBid = async (gigId, message, amount) => {
           </div>
         )}
 
-        {page === "status" && (
-          <div className="page">
-            <h2>Status</h2>
-            {myBids.map(b => {
-              const gig = gigs.find(g => g.id === b.gigId);
-              const isCreator = gig?.createdBy?.toString() === user._id?.toString();
+       {page === "status" && (
+  <div className="page">
+    <h2>Bids on Your Gigs</h2>
 
-              return (
-                <div key={b.id} className={`bid-card ${b.status || "pending"}`}>
-                <span className={`status-pill ${b.status || "pending"}`}>
-                {(b.status || "pending").toUpperCase()}
-                 </span>
+    {ownerBids.map(b => {
+      const gig = gigs.find(g => g.id === b.gigId);
+      const isCreator = gig?.createdBy === user._id;
 
-                  {isCreator && b.status === "pending" && (
-                  <button onClick={() => hireBid(b.id, b.gigId)}>
-                              Hire
-                  </button>
-                   )}
-                 </div>
-                     );
-               })}
-          </div>
-        )}
+      return (
+        <div key={b.id} className={`bid-card ${b.status}`}>
+          <p>{b.message}</p>
+          <strong>₹ {b.amount}</strong>
+
+          <span className={`status-pill ${b.status}`}>
+            {b.status.toUpperCase()}
+          </span>
+
+          {isCreator && b.status === "pending" && (
+            <button onClick={() => hireBid(b.id, b.gigId)}>
+              Hire
+            </button>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
+
 
 
        {page === "profile" && (

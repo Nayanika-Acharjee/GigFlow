@@ -49,8 +49,7 @@ useEffect(() => {
           const normalized = res.data.map(b => ({
             ...b,        // keep status, amount, message
             id: b._id,   // frontend id
-            gigId: b.gigId,
-            bidderId: b.bidderId,
+            gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
           }));
 
           collected.push(...normalized);
@@ -243,26 +242,24 @@ const placeBid = async (gigId, message, amount) => {
         {page === "status" && (
           <div className="page">
             <h2>Status</h2>
-            {ownerBids.map(b => {
+            {myBids.map(b => {
               const gig = gigs.find(g => g.id === b.gigId);
-              const isCreator =
-              gig?.createdBy?.toString() === user._id?.toString();
-
+              const isCreator = gig?.createdBy?.toString() === user._id?.toString();
 
               return (
-                <div key={b._id} className={`bid-card ${b.status}`}>
-                  <span className={`status-pill ${b.status}`}>
-                    {b.status.toUpperCase()}
-                  </span>
+                <div key={b.id} className={`bid-card ${b.status || "pending"}`}>
+                <span className={`status-pill ${b.status || "pending"}`}>
+                {(b.status || "pending").toUpperCase()}
+                 </span>
 
                   {isCreator && b.status === "pending" && (
-                    <button onClick={() => hireBid(b._id, b.gigId)}>
-                      Hire
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                  <button onClick={() => hireBid(b.id, b.gigId)}>
+                              Hire
+                  </button>
+                   )}
+                 </div>
+                     );
+               })}
           </div>
         )}
 

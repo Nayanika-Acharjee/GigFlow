@@ -42,14 +42,13 @@ useEffect(() => {
       const collected = [];
 
       for (const gig of gigs) {
-        // ✅ only gigs created by this user
-        if (gig.createdBy === user._id) {
+        // ✅ FIXED owner check
+        if (gig.createdBy?.toString() === user._id?.toString()) {
           const res = await api.get(`/bids/${gig.id}`);
 
-          // ✅ NORMALIZE bids for frontend
           const normalized = res.data.map(b => ({
-            ...b,                 // keep status, amount, message
-            id: b._id,            // frontend needs `id`
+            ...b,        // keep status, amount, message
+            id: b._id,   // frontend id
             gigId: b.gigId,
             bidderId: b.bidderId,
           }));
@@ -59,8 +58,7 @@ useEffect(() => {
       }
 
       setOwnerBids(collected);
-      console.log("OWNER BIDS:", collected);
-
+      console.log("OWNER BIDS →", collected);
     } catch (err) {
       console.error("Failed to load owner bids", err);
     }
@@ -69,8 +67,28 @@ useEffect(() => {
   fetchOwnerBids();
 }, [gigs, user]);
 
+  
+/*----------freelancer part-----------*/
 
   useEffect(() => {
+  if (!user) return;
+
+  api.get("/bids/my")
+    .then(res => {
+      const normalized = res.data.map(b => ({
+        ...b,
+        id: b._id,
+      }));
+
+      setBids(normalized);
+      console.log("MY BIDS →", normalized);
+    })
+    .catch(err => {
+      console.error("Failed to load my bids", err);
+      setBids([]);
+    });
+}, [user]);
+useEffect(() => {
   console.log("BIDS STATE →", bids);
 }, [bids]);
 
@@ -227,7 +245,8 @@ const placeBid = async (gigId, message, amount) => {
             <h2>Status</h2>
             {ownerBids.map(b => {
               const gig = gigs.find(g => g.id === b.gigId);
-             const isCreator = gig?.createdBy === user._id;
+              const isCreator =
+              gig?.createdBy?.toString() === user._id?.toString();
 
 
               return (

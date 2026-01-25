@@ -37,74 +37,45 @@ const [ownerBids, setOwnerBids] = useState([]);
 useEffect(() => {
   if (!user || gigs.length === 0) return;
 
-  const fetchOwnerBids = async () => {
+  const loadAllBids = async () => {
     try {
-      const collected = [];
+      let collected = [];
 
+      // 👑 GIG OWNER: bids on gigs I created
       for (const gig of gigs) {
-        // ✅ owner check
-        if (gig.createdBy?.toString() === user._id?.toString()) {
-          
-          // ✅ ALWAYS use string gig id
-          const gigId =
-            typeof gig.id === "object" ? gig.id._id : gig.id;
-
-          const res = await api.get(`/bids/${gigId}`);
-
-          const normalized = res.data.map(b => ({
-            ...b,
-            id: b._id,
-            gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
-          }));
-
-          collected.push(...normalized);
-        }
-      }
-
-      setBids(collected);   // ✅ IMPORTANT: setBids, not ownerBids
-      console.log("OWNER BIDS →", collected);
-    } catch (err) {
-      console.error("Failed to load owner bids", err);
-    }
-  };
-
-  fetchOwnerBids();
-}, [gigs, user]);
-
-  
-/*----------freelancer part-----------*/
-
- useEffect(() => {
-  if (!user || gigs.length === 0) return;
-
-  const fetchOwnerBids = async () => {
-    try {
-      const collected = [];
-
-      for (const gig of gigs) {
-        // ✅ FIX: use createdBy (not ownerId)
         if (String(gig.createdBy) === String(user._id)) {
           const res = await api.get(`/bids/${gig.id}`);
 
-          const normalized = res.data.map(b => ({
-            ...b,
-            id: b._id,
-            gigId:
-              typeof b.gigId === "object" ? b.gigId._id : b.gigId,
-          }));
-
-          collected.push(...normalized);
+          collected.push(
+            ...res.data.map(b => ({
+              ...b,
+              id: b._id,
+              gigId:
+                typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+            }))
+          );
         }
       }
 
-      setOwnerBids(collected);
-      console.log("OWNER BIDS LOADED →", collected);
+      // 👷 FREELANCER: my own bids
+      const myRes = await api.get("/bids/my");
+      collected.push(
+        ...myRes.data.map(b => ({
+          ...b,
+          id: b._id,
+          gigId:
+            typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+        }))
+      );
+
+      setBids(collected);
+      console.log("ALL BIDS (owner + freelancer) →", collected);
     } catch (err) {
-      console.error("Failed to load owner bids", err);
+      console.error("Failed to load bids", err);
     }
   };
 
-  fetchOwnerBids();
+  loadAllBids();
 }, [gigs, user]);
 
   
@@ -260,19 +231,18 @@ const placeBid = async (gigId, message, amount) => {
   </div>
 )}
 
-    {page === "status" && (
+  {page === "status" && (
   <div className="page">
     <h2>Status</h2>
 
-    {ownerBids.length === 0 && <p>No bids received yet.</p>}
+    {bids.length === 0 && <p>No bids received yet.</p>}
 
-    {ownerBids.map(b => {
+    {bids.map(b => {
       const gigId =
         typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
       const gig = gigs.find(g => g.id === gigId);
 
-      // ✅ SAFE creator check
       const isCreator =
         gig && String(gig.createdBy) === String(user._id);
 
@@ -290,7 +260,6 @@ const placeBid = async (gigId, message, amount) => {
             {status.toUpperCase()}
           </span>
 
-          {/* ✅ Hire button FIX */}
           {isCreator && status === "pending" && (
             <button onClick={() => hireBid(b._id || b.id, gigId)}>
               Hire
@@ -301,7 +270,6 @@ const placeBid = async (gigId, message, amount) => {
     })}
   </div>
 )}
-
 
 
        {page === "profile" && (

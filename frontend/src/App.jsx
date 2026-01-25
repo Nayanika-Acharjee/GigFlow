@@ -166,8 +166,7 @@ const placeBid = async (gigId, message, amount) => {
 
   /*-----------FILTERS--------------------*/
   const openGigs = gigs.filter(g => g.status !== "assigned");
-  const myBids = bids;
-
+ 
   /* ---------------- UI ---------------- */
 
   return (

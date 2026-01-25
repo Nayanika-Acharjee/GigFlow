@@ -230,12 +230,12 @@ const placeBid = async (gigId, message, amount) => {
           </div>
         )}
 
-       {page === "view-bids" && (
+      {page === "view-bids" && (
   <div className="page">
     <h2>Your Bids</h2>
 
     {myBids.map(b => (
-      <div key={b.id} className={`bid-card ${b.status}`}>
+      <div key={b._id || b.id} className={`bid-card ${b.status}`}>
         <p>{b.message}</p>
         <strong>₹ {b.amount}</strong>
 
@@ -258,53 +258,36 @@ const placeBid = async (gigId, message, amount) => {
   <div className="page">
     <h2>Status</h2>
 
-    {bids
-      .filter(b => {
-        const gigId =
-          typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+    {ownerBids.length === 0 && <p>No bids received yet.</p>}
 
-        const gig = gigs.find(g => g.id === gigId);
+    {ownerBids.map(b => {
+      const gigId =
+        typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
-        // ✅ ONLY bids for gigs created by me
-        return gig && String(gig.createdBy) === String(user._id);
-      })
-      .length === 0 && <p>No bids received yet.</p>}
+      const gig = gigs.find(g => g.id === gigId);
 
-    {bids
-      .filter(b => {
-        const gigId =
-          typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+      const isCreator =
+        gig && String(gig.createdBy) === String(user._id);
 
-        const gig = gigs.find(g => g.id === gigId);
-        return gig && String(gig.createdBy) === String(user._id);
-      })
-      .map(b => {
-        const gigId =
-          typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+      const status = b.status || "pending";
 
-        const status = b.status || "pending";
+      return (
+        <div key={b._id || b.id} className={`bid-card ${status}`}>
+          <p>{b.message}</p>
+          <strong>₹ {b.amount}</strong>
 
-        return (
-          <div
-            key={b._id || b.id}
-            className={`bid-card ${status}`}
-          >
-            <p>{b.message}</p>
-            <strong>₹ {b.amount}</strong>
+          <span className={`status-pill ${status}`}>
+            {status.toUpperCase()}
+          </span>
 
-            <span className={`status-pill ${status}`}>
-              {status.toUpperCase()}
-            </span>
-
-            {/* ✅ Hire button FINALLY works */}
-            {status === "pending" && (
-              <button onClick={() => hireBid(b._id || b.id, gigId)}>
-                Hire
-              </button>
-            )}
-          </div>
-        );
-      })}
+          {isCreator && status === "pending" && (
+            <button onClick={() => hireBid(b._id || b.id, gigId)}>
+              Hire
+            </button>
+          )}
+        </div>
+      );
+    })}
   </div>
 )}
 

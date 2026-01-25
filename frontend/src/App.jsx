@@ -77,8 +77,10 @@ useEffect(() => {
 
   loadAllBids();
 }, [gigs, user]);
-
   
+ console.log("STATUS BIDS:", bids);
+ 
+
   /* ---------------- AUTH HANDLERS ---------------- */
   const handleLogin = async () => {
     await login(email, password);
@@ -112,6 +114,7 @@ useEffect(() => {
       </div>
     );
   }
+
 
   /* ---------------- ACTIONS ---------------- */
   const createGig = async (title, desc, budget) => {
@@ -231,43 +234,58 @@ const placeBid = async (gigId, message, amount) => {
   </div>
 )}
 
-  {page === "status" && (
+
+{page === "status" && (
   <div className="page">
     <h2>Status</h2>
 
-    {bids.length === 0 && <p>No bids received yet.</p>}
+    {bids
+      .filter(b => {
+        const gigId =
+          typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
-    {bids.map(b => {
-      const gigId =
-        typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+        const gig = gigs.find(g => g.id === gigId);
 
-      const gig = gigs.find(g => g.id === gigId);
+        // ✅ ONLY bids for gigs created by me
+        return gig && String(gig.createdBy) === String(user._id);
+      })
+      .length === 0 && <p>No bids received yet.</p>}
 
-      const isCreator =
-        gig && String(gig.createdBy) === String(user._id);
+    {bids
+      .filter(b => {
+        const gigId =
+          typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
-      const status = b.status || "pending";
+        const gig = gigs.find(g => g.id === gigId);
+        return gig && String(gig.createdBy) === String(user._id);
+      })
+      .map(b => {
+        const gigId =
+          typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
-      return (
-        <div
-          key={b._id || b.id}
-          className={`bid-card ${status}`}
-        >
-          <p>{b.message}</p>
-          <strong>₹ {b.amount}</strong>
+        const status = b.status || "pending";
 
-          <span className={`status-pill ${status}`}>
-            {status.toUpperCase()}
-          </span>
+        return (
+          <div
+            key={b._id || b.id}
+            className={`bid-card ${status}`}
+          >
+            <p>{b.message}</p>
+            <strong>₹ {b.amount}</strong>
 
-          {isCreator && status === "pending" && (
-            <button onClick={() => hireBid(b._id || b.id, gigId)}>
-              Hire
-            </button>
-          )}
-        </div>
-      );
-    })}
+            <span className={`status-pill ${status}`}>
+              {status.toUpperCase()}
+            </span>
+
+            {/* ✅ Hire button FINALLY works */}
+            {status === "pending" && (
+              <button onClick={() => hireBid(b._id || b.id, gigId)}>
+                Hire
+              </button>
+            )}
+          </div>
+        );
+      })}
   </div>
 )}
 

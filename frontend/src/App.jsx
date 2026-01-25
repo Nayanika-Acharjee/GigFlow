@@ -16,7 +16,7 @@ export default function App() {
   const [gigs, setGigs] = useState([]);
   const [bids, setBids] = useState([]);
   
-const [ownerBids, setOwnerBids] = useState([]);
+
 
   /* ---------------- LOAD GIGS ---------------- */
   useEffect(() => {

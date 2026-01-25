@@ -74,28 +74,38 @@ useEffect(() => {
   
 /*----------freelancer part-----------*/
 
-  useEffect(() => {
-  if (!user) return;
+ useEffect(() => {
+  if (!user || gigs.length === 0) return;
 
-  api.get("/bids/my")
-    .then(res => {
-      const normalized = res.data.map(b => ({
-        ...b,
-        id: b._id,
-        gigId: typeof b.gigId === "object" ? b.gigId._id : b.gigId,
-      }));
+  const fetchOwnerBids = async () => {
+    try {
+      const collected = [];
 
-      setBids(normalized);
-      console.log("MY BIDS →", normalized);
-    })
-    .catch(err => {
-      console.error("Failed to load my bids", err);
-      setBids([]);
-    });
-}, [user]);
-useEffect(() => {
-  console.log("BIDS STATE →", bids);
-}, [bids]);
+      for (const gig of gigs) {
+        // ✅ FIX: use createdBy (not ownerId)
+        if (String(gig.createdBy) === String(user._id)) {
+          const res = await api.get(`/bids/${gig.id}`);
+
+          const normalized = res.data.map(b => ({
+            ...b,
+            id: b._id,
+            gigId:
+              typeof b.gigId === "object" ? b.gigId._id : b.gigId,
+          }));
+
+          collected.push(...normalized);
+        }
+      }
+
+      setOwnerBids(collected);
+      console.log("OWNER BIDS LOADED →", collected);
+    } catch (err) {
+      console.error("Failed to load owner bids", err);
+    }
+  };
+
+  fetchOwnerBids();
+}, [gigs, user]);
 
   
   /* ---------------- AUTH HANDLERS ---------------- */

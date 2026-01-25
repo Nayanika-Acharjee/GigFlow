@@ -16,7 +16,7 @@ export default function App() {
   const [gigs, setGigs] = useState([]);
  
   
-const [bids, setBids] = useState([]);      // freelancer bids
+const [myBids, setMyBids] = useState([]);       // freelancer bids
 const [ownerBids, setOwnerBids] = useState([]); // bids on my gigs
 
 

@@ -250,29 +250,39 @@ const placeBid = async (gigId, message, amount) => {
   </div>
 )}
 
-      {page === "status" && (
+    {page === "status" && (
   <div className="page">
     <h2>Status</h2>
+
+    {ownerBids.length === 0 && <p>No bids received yet.</p>}
 
     {ownerBids.map(b => {
       const gigId =
         typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
       const gig = gigs.find(g => g.id === gigId);
+
+      // ✅ SAFE creator check
       const isCreator =
-        gig?.createdBy?.toString() === user._id?.toString();
+        gig && String(gig.createdBy) === String(user._id);
+
+      const status = b.status || "pending";
 
       return (
-        <div key={b.id} className={`bid-card ${b.status}`}>
+        <div
+          key={b._id || b.id}
+          className={`bid-card ${status}`}
+        >
           <p>{b.message}</p>
           <strong>₹ {b.amount}</strong>
 
-          <span className={`status-pill ${b.status}`}>
-            {b.status ? b.status.toUpperCase() : "PENDING"}
+          <span className={`status-pill ${status}`}>
+            {status.toUpperCase()}
           </span>
 
-          {isCreator && b.status === "pending" && (
-            <button onClick={() => hireBid(b.id, gigId)}>
+          {/* ✅ Hire button FIX */}
+          {isCreator && status === "pending" && (
+            <button onClick={() => hireBid(b._id || b.id, gigId)}>
               Hire
             </button>
           )}

@@ -227,35 +227,40 @@ const placeBid = async (gigId, message, amount) => {
           </div>
         )}
 
-        {page === "view-bids" && (
-          <div className="page">
-            <h2>Your Bids</h2>
-            {myBids.map(b => (
-              <div key={b._id} className={`bid-card ${b.status}`}>
-                <p>{b.message}</p>
-              <strong>₹ {b.amount}</strong>
-
-                <span className={`status-pill ${b.status}`}>
-                 {b.status.toUpperCase()}
-                   </span>
-
-                {b.status === "hired" && (
-                  <p style={{ color: "green", fontWeight: "bold" }}>
-                    🎉 Congratulations! You got hired!
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-       {page === "status" && (
+       {page === "view-bids" && (
   <div className="page">
-    <h2>Bids on Your Gigs</h2>
+    <h2>Your Bids</h2>
+
+    {myBids.map(b => (
+      <div key={b.id} className={`bid-card ${b.status}`}>
+        <p>{b.message}</p>
+        <strong>₹ {b.amount}</strong>
+
+        <span className={`status-pill ${b.status}`}>
+          {b.status ? b.status.toUpperCase() : "PENDING"}
+        </span>
+
+        {b.status === "hired" && (
+          <p style={{ color: "green", fontWeight: "bold" }}>
+            🎉 Congratulations! You got hired!
+          </p>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+
+      {page === "status" && (
+  <div className="page">
+    <h2>Status</h2>
 
     {ownerBids.map(b => {
-      const gig = gigs.find(g => g.id === b.gigId);
-      const isCreator = gig?.createdBy === user._id;
+      const gigId =
+        typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+
+      const gig = gigs.find(g => g.id === gigId);
+      const isCreator =
+        gig?.createdBy?.toString() === user._id?.toString();
 
       return (
         <div key={b.id} className={`bid-card ${b.status}`}>
@@ -263,11 +268,11 @@ const placeBid = async (gigId, message, amount) => {
           <strong>₹ {b.amount}</strong>
 
           <span className={`status-pill ${b.status}`}>
-            {b.status.toUpperCase()}
+            {b.status ? b.status.toUpperCase() : "PENDING"}
           </span>
 
           {isCreator && b.status === "pending" && (
-            <button onClick={() => hireBid(b.id, b.gigId)}>
+            <button onClick={() => hireBid(b.id, gigId)}>
               Hire
             </button>
           )}

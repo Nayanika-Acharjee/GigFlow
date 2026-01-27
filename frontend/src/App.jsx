@@ -41,16 +41,20 @@ useEffect(() => {
     try {
       const collected = [];
 
-      for (const gig of gigs) {
-           console.log("CHECK", {
-           gigOwner: gig.ownerId,
-            userId: user._id
-          });
+    for (const gig of gigs) {
+        const ownerId =
+          typeof gig.ownerId === "object"
+            ? gig.ownerId._id
+            : gig.ownerId;
 
-         if (gig.ownerId?._id?.toString() === user._id?.toString()) {
+        console.log("CHECK", {
+          gigOwner: ownerId,
+          userId: user._id,
+        });
 
+        if (String(ownerId) === String(user._id)) {
           const res = await api.get(`/bids/${gig.id}`);
-
+          
           const normalized = res.data.map(b => ({
             ...b,
             id: b._id,

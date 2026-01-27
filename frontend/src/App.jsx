@@ -42,7 +42,12 @@ useEffect(() => {
       const collected = [];
 
       for (const gig of gigs) {
-        if (String(gig.createdBy) === String(user._id)) {
+           console.log("CHECK", {
+           gigOwner: gig.ownerId,
+            userId: user._id
+          });
+
+          if (gig.ownerId?.toString() === user._id?.toString()) {
           const res = await api.get(`/bids/${gig.id}`);
 
           const normalized = res.data.map(b => ({

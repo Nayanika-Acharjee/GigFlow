@@ -42,14 +42,8 @@ useEffect(() => {
       const collected = [];
 
       for (const gig of gigs) {
-        // ✅ owner check
-        if (gig.createdBy?.toString() === user._id?.toString()) {
-          
-          // ✅ ALWAYS use string gig id
-          const gigId =
-            typeof gig.id === "object" ? gig.id._id : gig.id;
-
-          const res = await api.get(`/bids/${gigId}`);
+        if (String(gig.createdBy) === String(user._id)) {
+          const res = await api.get(`/bids/${gig.id}`);
 
           const normalized = res.data.map(b => ({
             ...b,
@@ -61,7 +55,7 @@ useEffect(() => {
         }
       }
 
-      setBids(collected);   // ✅ IMPORTANT: setBids, not ownerBids
+      setOwnerBids(collected); // ✅ THIS IS THE KEY FIX
       console.log("OWNER BIDS →", collected);
     } catch (err) {
       console.error("Failed to load owner bids", err);
@@ -94,8 +88,10 @@ useEffect(() => {
     });
 }, [user]);
 useEffect(() => {
-  console.log("BIDS STATE →", bids);
-}, [bids]);
+  console.log("BIDS →", bids);
+  console.log("OWNER BIDS →", ownerBids);
+}, [bids, ownerBids]);
+
 
   
   /* ---------------- AUTH HANDLERS ---------------- */
@@ -250,9 +246,11 @@ const placeBid = async (gigId, message, amount) => {
   </div>
 )}
 
-      {page === "status" && (
+   {page === "status" && (
   <div className="page">
     <h2>Status</h2>
+
+    {ownerBids.length === 0 && <p>No bids received yet.</p>}
 
     {ownerBids.map(b => {
       const gigId =
@@ -260,18 +258,20 @@ const placeBid = async (gigId, message, amount) => {
 
       const gig = gigs.find(g => g.id === gigId);
       const isCreator =
-        gig?.createdBy?.toString() === user._id?.toString();
+        gig && String(gig.createdBy) === String(user._id);
+
+      const status = b.status || "pending";
 
       return (
-        <div key={b.id} className={`bid-card ${b.status}`}>
+        <div key={b.id} className={`bid-card ${status}`}>
           <p>{b.message}</p>
           <strong>₹ {b.amount}</strong>
 
-          <span className={`status-pill ${b.status}`}>
-            {b.status ? b.status.toUpperCase() : "PENDING"}
+          <span className={`status-pill ${status}`}>
+            {status.toUpperCase()}
           </span>
 
-          {isCreator && b.status === "pending" && (
+          {isCreator && status === "pending" && (
             <button onClick={() => hireBid(b.id, gigId)}>
               Hire
             </button>
@@ -281,7 +281,6 @@ const placeBid = async (gigId, message, amount) => {
     })}
   </div>
 )}
-
 
 
        {page === "profile" && (

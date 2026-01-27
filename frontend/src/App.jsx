@@ -47,7 +47,8 @@ useEffect(() => {
             userId: user._id
           });
 
-          if (gig.ownerId?.toString() === user._id?.toString()) {
+         if (gig.ownerId?._id?.toString() === user._id?.toString()) {
+
           const res = await api.get(`/bids/${gig.id}`);
 
           const normalized = res.data.map(b => ({

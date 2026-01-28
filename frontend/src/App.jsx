@@ -263,45 +263,45 @@ const placeBid = async (gigId, message, amount) => {
     {ownerBids.length === 0 && <p>No bids received yet.</p>}
 
     {ownerBids.map(b => {
-      const gigId =
-        typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+  const gigId =
+    typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
-      const gig = gigs.find(g => g.id === gigId);
-      const isCreator =
-        gig && String(gig.createdBy) === String(user._id);
+  const gig = gigs.find(g => g.id === gigId);
+  const status = b.status || "pending";
 
-      const status = b.status || "pending";
+  const isCreator =
+    gig && String(gig.ownerId) === String(user._id);
 
-      return (
-        <div key={b.id} className={`bid-card ${status}`}>
-          <p>{b.message}</p>
-          <strong>₹ {b.amount}</strong>
+  // ✅ SAFE DEBUG LOG
+  console.log("HIRE CHECK", {
+    gigId,
+    gigStatus: gig?.status,
+    bidStatus: status,
+    ownerId: gig?.ownerId,
+    userId: user._id,
+    isCreator
+  });
 
-          <span className={`status-pill ${status}`}>
-            {status.toUpperCase()}
-          </span>
+  return (
+    <div key={b._id || b.id} className={`bid-card ${status}`}>
+      <p>{b.message}</p>
+      <strong>₹ {b.amount}</strong>
 
-         
-    {gig &&
-  gig.status === "open" &&
-  status === "pending" &&
-  String(gig.ownerId) === String(user._id) && (
-    <>
-      {(() => {
-        console.log("HIRE CHECK", {
-          gigStatus: gig.status,
-          bidStatus: status,
-          ownerId: gig.ownerId,
-          userId: user._id
-        });
-        return null;
-      })()}
-      <button onClick={() => hireBid(b._id || b.id, gigId)}>
-        Hire
-      </button>
-    </>
-)}
+      <span className={`status-pill ${status}`}>
+        {status.toUpperCase()}
+      </span>
 
+      {gig &&
+        gig.status === "open" &&
+        status === "pending" &&
+       String(gig.ownerId) === String(user._id)&& (
+          <button onClick={() => hireBid(b._id || b.id, gigId)}>
+            Hire
+          </button>
+        )}
+    </div>
+  );
+})
 
 
        {page === "profile" && (

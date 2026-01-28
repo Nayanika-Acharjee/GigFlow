@@ -274,7 +274,8 @@ const hireBid = async (bidId, gigId) => {
     {myBids.map(b => (
       <div key={b.id} className={`bid-card ${b.status}`}>
         <p>{b.message}</p>
-        <strong>₹ {b.amount}</strong>
+        <strong>₹ {b.price || b.amount || "—"}</strong>
+
 
         <span className={`status-pill ${b.status}`}>
           {b.status ? b.status.toUpperCase() : "PENDING"}
@@ -324,7 +325,8 @@ const hireBid = async (bidId, gigId) => {
       return (
         <div key={b._id || b.id} className={`bid-card ${status}`}>
           <p>{b.message}</p>
-          <strong>₹ {b.price}</strong>
+         <strong>₹ {b.price || b.amount || "—"}</strong>
+
 
           <span className={`status-pill ${status}`}>
             {status.toUpperCase()}

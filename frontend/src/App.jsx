@@ -164,7 +164,41 @@ const placeBid = async (gigId, message, amount) => {
     alert(err.response?.data?.message || "Failed to place bid");
   }
 };
+  //new(hirebid)
 
+const hireBid = async (bidId, gigId) => {
+  try {
+    await api.post(`/bids/${bidId}/hire`);
+
+    // 🔁 Optimistic UI update (important)
+    setBids(prev =>
+      prev.map(b => {
+        if (b._id === bidId || b.id === bidId) {
+          return { ...b, status: "hired" };
+        }
+        if (
+          (typeof b.gigId === "object" ? b.gigId._id : b.gigId) === gigId
+        ) {
+          return { ...b, status: "rejected" };
+        }
+        return b;
+      })
+    );
+
+    // 🔁 Also update gig status locally
+    setGigs(prev =>
+      prev.map(g =>
+        (g.id === gigId || g._id === gigId)
+          ? { ...g, status: "assigned" }
+          : g
+      )
+    );
+
+  } catch (err) {
+    console.error("Hire failed", err);
+    alert(err.response?.data?.message || "Failed to hire freelancer");
+  }
+};
 
   /*-----------FILTERS--------------------*/
   const openGigs = gigs.filter(g => g.status !== "assigned");

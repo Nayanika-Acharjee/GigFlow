@@ -67,7 +67,7 @@ router.get("/:gigId", protect, async (req, res) => {
     }
 
     const bids = await Bid.find({ gigId: req.params.gigId })
-      .populate("freelancerId", "name email");
+      .populate("bidderId", "name email");
 
     res.json(bids);
   } catch (err) {

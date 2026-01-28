@@ -102,6 +102,12 @@ useEffect(() => {
   console.log("OWNER BIDS →", ownerBids);
 }, [bids, ownerBids]);
 
+console.log("HIRE CHECK", {
+  gigStatus: gig?.status,
+  bidStatus: status,
+  ownerId: gig?.ownerId,
+  userId: user._id
+});
 
   
   /* ---------------- AUTH HANDLERS ---------------- */
@@ -281,11 +287,15 @@ const placeBid = async (gigId, message, amount) => {
             {status.toUpperCase()}
           </span>
 
-          {isCreator && status === "pending" && (
-            <button onClick={() => hireBid(b.id, gigId)}>
-              Hire
-            </button>
-          )}
+         
+          {gig &&
+           gig.status === "open" &&
+           status === "pending" &&
+           String(gig.ownerId) === String(user._id) && (
+          <button onClick={() => hireBid(b._id || b.id, gigId)}>
+             Hire
+           </button>
+          )}      
         </div>
       );
     })}

@@ -256,54 +256,58 @@ const placeBid = async (gigId, message, amount) => {
   </div>
 )}
 
-   {page === "status" && (
+ {page === "status" && (
   <div className="page">
     <h2>Status</h2>
 
     {ownerBids.length === 0 && <p>No bids received yet.</p>}
 
     {ownerBids.map(b => {
-  const gigId =
-    typeof b.gigId === "object" ? b.gigId._id : b.gigId;
+      const gigId =
+        typeof b.gigId === "object" ? b.gigId._id : b.gigId;
 
-  const gig = gigs.find(g => g.id === gigId);
-  const status = b.status || "pending";
+      const gig = gigs.find(g => g.id === gigId);
+      const status = b.status || "pending";
 
-  const isCreator =
-    gig && String(gig.ownerId) === String(user._id);
+      const isCreator =
+        gig && String(gig.ownerId) === String(user._id);
 
-  // ✅ SAFE DEBUG LOG
-  console.log("HIRE CHECK", {
-    gigId,
-    gigStatus: gig?.status,
-    bidStatus: status,
-    ownerId: gig?.ownerId,
-    userId: user._id,
-    isCreator
-  });
+      // ✅ DEBUG
+      console.log("HIRE CHECK", {
+        gigId,
+        gigStatus: gig?.status,
+        bidStatus: status,
+        ownerId: gig?.ownerId,
+        userId: user._id,
+        isCreator
+      });
 
-  return (
-    <div key={b._id || b.id} className={`bid-card ${status}`}>
-      <p>{b.message}</p>
-      <strong>₹ {b.amount}</strong>
+      return (
+        <div key={b._id || b.id} className={`bid-card ${status}`}>
+          <p>{b.message}</p>
+          <strong>₹ {b.amount}</strong>
 
-      <span className={`status-pill ${status}`}>
-        {status.toUpperCase()}
-      </span>
+          <span className={`status-pill ${status}`}>
+            {status.toUpperCase()}
+          </span>
 
-      {gig &&
-        gig.status === "open" &&
-        status === "pending" &&
-       String(gig.ownerId) === String(user._id)&& (
-          <button onClick={() => hireBid(b._id || b.id, gigId)}>
-            Hire
-          </button>
-        )}
-    </div>
-  );
-})
+          {gig &&
+            gig.status === "open" &&
+            status === "pending" &&
+            String(gig.ownerId) === String(user._id) && (
+              <button onClick={() => hireBid(b._id || b.id, gigId)}>
+                Hire
+              </button>
+            )}
+        </div>
+      );
+    })}
+  </div>
+)}
 
 
+
+      
        {page === "profile" && (
   <div className="page">
     <h2>Profile</h2>

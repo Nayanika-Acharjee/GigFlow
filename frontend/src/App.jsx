@@ -269,8 +269,13 @@ const placeBid = async (gigId, message, amount) => {
       const gig = gigs.find(g => g.id === gigId);
       const status = b.status || "pending";
 
-      const isCreator =
-        gig && String(gig.ownerId) === String(user._id);
+     const isCreator =
+  gig &&
+  String(
+    typeof gig.ownerId === "object"
+      ? gig.ownerId._id
+      : gig.ownerId
+  ) === String(user._id);
 
       // ✅ DEBUG
       console.log("HIRE CHECK", {
@@ -291,13 +296,17 @@ const placeBid = async (gigId, message, amount) => {
             {status.toUpperCase()}
           </span>
 
-          {gig &&
-            gig.status === "open" &&
-            status === "pending" &&
-            String(gig.ownerId) === String(user._id) && (
-              <button onClick={() => hireBid(b._id || b.id, gigId)}>
-                Hire
-              </button>
+         {gig &&
+  gig.status === "open" &&
+  status === "pending" &&
+  String(
+    typeof gig.ownerId === "object"
+      ? gig.ownerId._id
+      : gig.ownerId
+  ) === String(user._id) && (
+    <button onClick={() => hireBid(b._id || b.id, gigId)}>
+      Hire
+    </button>
             )}
         </div>
       );

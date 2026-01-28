@@ -102,12 +102,6 @@ useEffect(() => {
   console.log("OWNER BIDS →", ownerBids);
 }, [bids, ownerBids]);
 
-console.log("HIRE CHECK", {
-  gigStatus: gig?.status,
-  bidStatus: status,
-  ownerId: gig?.ownerId,
-  userId: user._id
-});
 
   
   /* ---------------- AUTH HANDLERS ---------------- */
@@ -288,19 +282,26 @@ const placeBid = async (gigId, message, amount) => {
           </span>
 
          
-          {gig &&
-           gig.status === "open" &&
-           status === "pending" &&
-           String(gig.ownerId) === String(user._id) && (
-          <button onClick={() => hireBid(b._id || b.id, gigId)}>
-             Hire
-           </button>
-          )}      
-        </div>
-      );
-    })}
-  </div>
+    {gig &&
+  gig.status === "open" &&
+  status === "pending" &&
+  String(gig.ownerId) === String(user._id) && (
+    <>
+      {(() => {
+        console.log("HIRE CHECK", {
+          gigStatus: gig.status,
+          bidStatus: status,
+          ownerId: gig.ownerId,
+          userId: user._id
+        });
+        return null;
+      })()}
+      <button onClick={() => hireBid(b._id || b.id, gigId)}>
+        Hire
+      </button>
+    </>
 )}
+
 
 
        {page === "profile" && (

@@ -149,7 +149,7 @@ const placeBid = async (gigId, message, amount) => {
     const res = await api.post("/bids", {
       gigId,
       message,
-      amount: Number(amount),
+      amount:  b.price,
     });
 
     const newBid = {

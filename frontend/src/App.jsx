@@ -149,7 +149,7 @@ const placeBid = async (gigId, message, amount) => {
     const res = await api.post("/bids", {
       gigId,
       message,
-      amount:  b.price,
+       amount: Number(amount),
     });
 
     const newBid = {
@@ -324,7 +324,7 @@ const hireBid = async (bidId, gigId) => {
       return (
         <div key={b._id || b.id} className={`bid-card ${status}`}>
           <p>{b.message}</p>
-          <strong>₹ {b.amount}</strong>
+          <strong>₹ {b.price}</strong>
 
           <span className={`status-pill ${status}`}>
             {status.toUpperCase()}
